@@ -1,0 +1,163 @@
+/* ============================================
+   CARD ICON COMPONENT STYLES
+   ============================================ */
+
+.card-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--color-bg-tertiary), var(--color-bg-secondary));
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+
+  /* Hover effect */
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* Size variants */
+  &--sm {
+    width: 2.5rem;
+    height: 3rem;
+  }
+
+  &--md {
+    width: 3.5rem;
+    height: 4.25rem;
+  }
+
+  &--lg {
+    width: 4.5rem;
+    height: 5.5rem;
+  }
+
+  /* ============================================
+     RARITY STYLES (Glow colors)
+     ============================================ */
+
+  &--common {
+    border: 2px solid #94a3b8;
+  }
+
+  &--rare {
+    border: 2px solid #f59e0b;
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+  }
+
+  &--epic {
+    border: 2px solid #a855f7;
+    box-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
+  }
+
+  &--legendary {
+    border: 2px solid #fbbf24;
+    box-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
+    animation: legendary-pulse 2s ease-in-out infinite;
+  }
+
+  &--champion {
+    border: 2px solid #ef4444;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+  }
+
+  /* Card type background tint */
+  &--spell {
+    background: linear-gradient(135deg, #1e3a8a, #1e40af);
+  }
+
+  &--troop {
+    background: linear-gradient(135deg, #1e293b, #334155);
+  }
+
+  &--building {
+    background: linear-gradient(135deg, #14532d, #166534);
+  }
+}
+
+/* Legendary glow animation */
+@keyframes legendary-pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
+  }
+
+  50% {
+    box-shadow: 0 0 25px rgba(251, 191, 36, 0.6);
+  }
+}
+
+/* Card Image */
+.card-icon__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Card Placeholder (fallback) */
+.card-icon__placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--color-bg-tertiary), var(--color-bg-secondary));
+}
+
+.card-icon__initial {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+/* Elixir Badge */
+.card-icon__elixir {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 4px;
+  border-radius: var(--radius-sm);
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: rgba(15, 23, 42, 0.9);
+  backdrop-filter: blur(4px);
+
+  /* Elixir cost colors */
+  &--low {
+    color: #22c55e;
+    border: 1px solid rgba(34, 197, 94, 0.5);
+  }
+
+  &--medium {
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.5);
+  }
+
+  &--high {
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.5);
+  }
+}
+
+.elixir-drop {
+  font-size: 0.6rem;
+}
+
+.elixir-value {
+  font-size: 0.75rem;
+}
+
+/* Glow effect */
+.card-icon__glow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+}

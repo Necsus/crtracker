@@ -1,0 +1,35 @@
+<!-- Root App Component -->
+<div class="app-root">
+
+  <!-- App Header -->
+  <header class="app-header">
+    <div class="app-header__content">
+      <div class="app-brand">
+        <span class="app-brand__icon">🎯</span>
+        <h1 class="app-brand__title">CRTracker</h1>
+      </div>
+      <nav class="app-nav">
+        <a routerLink="/" class="nav-link" routerLinkActive="nav-link--active">
+          <span class="nav-link__icon">🏠</span>
+          <span>Decks</span>
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="app-main">
+    <router-outlet />
+  </main>
+
+  <!-- App Footer -->
+  <footer class="app-footer">
+    <p class="app-footer__text">
+      CRTracker - Strategic Assistant for Clash Royale Players
+    </p>
+    <p class="app-footer__subtext">
+      Based on Top 1000 ladder data analysis
+    </p>
+  </footer>
+
+</div>

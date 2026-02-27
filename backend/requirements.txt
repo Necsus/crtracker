@@ -1,0 +1,28 @@
+# FastAPI & ASGI Server
+fastapi==0.134.0
+uvicorn[standard]==0.41.0
+
+# Database & ORM
+sqlalchemy[asyncio]==2.0.47
+asyncpg==0.31.0
+alembic==1.18.4
+
+# Validation & Settings
+pydantic==2.12.5
+pydantic-settings==2.13.1
+pydantic[email]
+
+# Security
+python-jose[cryptography]==3.5.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.22
+
+# HTTP Client
+httpx==0.28.1
+
+# LLM Integration (ready for production)
+openai==2.24.0
+groq==1.0.0
+
+# Utils
+python-dotenv==1.2.1

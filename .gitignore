@@ -1,0 +1,71 @@
+
+# OS
+Thumbs.db
+Desktop.ini
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+*.egg
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.tox/
+.nox/
+.hypothesis/
+dist/
+build/
+pip-wheel-metadata/
+*.log
+*.sqlite3
+
+# Python virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# FastAPI / Uvicorn
+*.env
+.env.*
+
+# Node / Angular
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+.npm/
+.yarn/
+dist/
+out/
+
+# Angular specific
+.angular/cache/
+.angular/
+/.sass-cache/
+
+# IDE / Editor
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+
+# OS / Misc
+*.DS_Store
+*.tmp
+*.bak
+*.old
+*.orig
+

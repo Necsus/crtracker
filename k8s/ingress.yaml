@@ -1,0 +1,133 @@
+# CRTracker Ingress Configuration
+# Uses Traefik IngressController with Cert-Manager for Let's Encrypt SSL
+
+---
+# Frontend Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: crtracker-frontend
+  namespace: crtracker
+  annotations:
+    # Traefik configuration
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.middlewares: crtracker-redirect-scheme@kubernetescrd
+
+    # Cert-Manager for automatic SSL
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    cert-manager.io/issue-temporary-certificate: "true"
+
+    # Security headers
+    traefik.ingress.kubernetes.io/router.headers.customrequestheaders.X-Forwarded-Proto: "https"
+
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - crtracker.necsus.dev
+      secretName: crtracker-frontend-tls
+
+  rules:
+    - host: crtracker.necsus.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80
+
+---
+# Backend API Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: crtracker-backend
+  namespace: crtracker
+  annotations:
+    # Traefik configuration
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+
+    # CORS handling via Traefik middleware
+    traefik.ingress.kubernetes.io/router.middlewares: crtracker-cors-headers@kubernetescrd
+
+    # Cert-Manager for automatic SSL
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    cert-manager.io/issue-temporary-certificate: "true"
+
+    # Rate limiting (optional)
+    traefik.ingress.kubernetes.io/router.middlewares: crtracker-rate-limit@kubernetescrd
+
+    # Security headers
+    traefik.ingress.kubernetes.io/router.headers.customrequestheaders.X-Forwarded-Proto: "https"
+
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - api-crtracker.necsus.dev
+      secretName: crtracker-backend-tls
+
+  rules:
+    - host: api-crtracker.necsus.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 8000
+
+---
+# Middleware: CORS Headers (optional, can also be handled in FastAPI)
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: cors-headers
+  namespace: crtracker
+spec:
+  headers:
+    customRequestHeaders:
+      X-Forwarded-Proto: "https"
+    accessControlAllowMethods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+      - OPTIONS
+    accessControlAllowHeaders:
+      - Authorization
+      - Content-Type
+    accessControlAllowOriginList:
+      - https://crtracker.necsus.dev
+    accessControlMaxAge: 100
+
+---
+# Middleware: HTTP to HTTPS Redirect
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: redirect-scheme
+  namespace: crtracker
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true
+
+---
+# Middleware: Rate Limiting (optional)
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: rate-limit
+  namespace: crtracker
+spec:
+  rateLimit:
+    average: 100
+    burst: 50

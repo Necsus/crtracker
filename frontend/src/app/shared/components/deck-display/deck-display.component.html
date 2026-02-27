@@ -1,0 +1,27 @@
+<!-- Deck Display Component -->
+<div class="deck-display">
+
+  <!-- Deck Header -->
+  @if (showMeta()) {
+  <div class="deck-display__header">
+    <div class="deck-display__title">
+      <h3 class="deck-display__name">{{ deck().name }}</h3>
+      <span class="deck-display__archetype">{{ deck().archetype }}</span>
+    </div>
+    <div class="deck-display__stats">
+      <span class="deck-display__elixir">
+        <span class="elixir-icon">💧</span>
+        {{ deck().avg_elixir.toFixed(1) }} avg
+      </span>
+    </div>
+  </div>
+  }
+
+  <!-- Cards Grid -->
+  <div class="deck-display__cards" [class.deck-display__cards--clickable]="clickable()">
+    @for (card of deck().cards; track card.id) {
+    <app-card-icon [card]="card" [size]="cardSize()" />
+    }
+  </div>
+
+</div>

@@ -1,0 +1,51 @@
+/* ============================================
+   WINRATE BADGE COMPONENT STYLES
+   ============================================ */
+
+.winrate-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+
+  /* Size variants */
+  &--sm {
+    font-size: 0.75rem;
+  }
+
+  &--md {
+    font-size: 0.875rem;
+  }
+
+  &--lg {
+    font-size: 1rem;
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
+  /* Color variants */
+  &--favorable {
+    background: var(--color-success-bg);
+    color: var(--color-success);
+  }
+
+  &--even {
+    background: var(--color-warning-bg);
+    color: var(--color-warning);
+  }
+
+  &--unfavorable {
+    background: var(--color-danger-bg);
+    color: var(--color-danger);
+  }
+}
+
+.winrate-badge__icon {
+  font-size: 0.75em;
+}
+
+.winrate-badge__value {
+  line-height: 1;
+}

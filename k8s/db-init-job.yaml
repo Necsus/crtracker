@@ -1,0 +1,59 @@
+# CRTracker Database Initialization Job
+# Runs Alembic migrations to setup database schema
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-migrate
+  namespace: crtracker
+  labels:
+    app: crtracker
+    component: db-init
+spec:
+  template:
+    metadata:
+      labels:
+        app: crtracker
+        component: db-init
+    spec:
+      restartPolicy: OnFailure
+
+      containers:
+        - name: alembic
+          image: registry.necsus.dev/crtracker/backend:latest
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Running Alembic migrations..."
+              alembic upgrade head
+              echo "Migrations completed successfully!"
+          envFrom:
+            - secretRef:
+                name: crtracker-secrets
+
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: crtracker-secrets
+                  key: DATABASE_URL
+
+---
+# Alternative: InitContainer approach (uncomment if preferred)
+# This would run migrations before starting the backend pod
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: backend
+#   namespace: crtracker
+# spec:
+#   template:
+#     spec:
+#       initContainers:
+#         - name: db-migrate
+#           image: registry.necsus.dev/crtracker/backend:latest
+#           command: ['alembic', 'upgrade', 'head']
+#           envFrom:
+#             - secretRef:
+#                 name: crtracker-secrets

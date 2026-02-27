@@ -1,0 +1,176 @@
+<!-- Deck Search Component -->
+<div class="deck-search">
+
+  <!-- Header -->
+  <header class="deck-search__header">
+    <h1 class="deck-search__title">
+      <span class="title-icon">🎯</span>
+      <span class="title-text">Deck Explorer</span>
+    </h1>
+    <p class="deck-search__subtitle">
+      Browse Top 1000 decks and discover matchup statistics
+    </p>
+  </header>
+
+  <!-- Search Bar -->
+  <div class="deck-search__search">
+    <div class="search-bar">
+      <span class="search-bar__icon">🔍</span>
+      <input type="text" class="search-bar__input" placeholder="Search by archetype or deck name..."
+        [value]="searchQuery" (input)="onSearchInput($any($event.target).value)" />
+    </div>
+    <button class="import-btn" (click)="showImportModal = true">
+      <span class="import-btn__icon">📥</span>
+      <span>Import Player</span>
+    </button>
+  </div>
+
+  <!-- Error Banner -->
+  @if (hasError()) {
+  <div class="error-banner">
+    <span class="error-banner__icon">⚠️</span>
+    <span class="error-banner__message">{{ errorMessage() }}</span>
+    <button class="error-banner__dismiss" (click)="onDismissError()">✕</button>
+  </div>
+  }
+
+  <!-- Featured Decks -->
+  @if (featuredDecks().length > 0 && !currentDeck()) {
+  <section class="deck-search__featured">
+    <h2 class="section-title">🏆 Popular Decks</h2>
+    <div class="featured-grid">
+      @for (deck of featuredDecks(); track deck.id) {
+      <div class="featured-card" (click)="onSelectDeck(deck.id)"
+        [class.featured-card--active]="currentDeck()?.id === deck.id">
+        <div class="featured-card__info">
+          <h3 class="featured-card__name">{{ deck.name }}</h3>
+          <span class="featured-card__archetype">{{ deck.archetype }}</span>
+        </div>
+        <div class="featured-card__elixir">💧 {{ deck.avg_elixir }}</div>
+      </div>
+      }
+    </div>
+  </section>
+  }
+
+  <!-- Deck List / Details -->
+  <div class="deck-search__content" #deckDetailsSection>
+
+    <!-- Left Panel: Deck List -->
+    @if (!currentDeck()) {
+    <div class="deck-list-panel">
+      @if (isLoading() && filteredDecks().length === 0) {
+      <app-loading-spinner message="Loading decks..." size="lg" />
+      } @else if (filteredDecks().length === 0) {
+      <div class="empty-state">
+        <span class="empty-state__icon">🔍</span>
+        <h3 class="empty-state__title">No decks found</h3>
+        <p class="empty-state__message">Try a different search term</p>
+      </div>
+      } @else {
+      <div class="deck-list">
+        @for (deck of filteredDecks(); track deck.id) {
+        <div class="deck-list-item" (click)="onSelectDeck(deck.id)">
+          <div class="deck-list-item__info">
+            <h3 class="deck-list-item__name">{{ deck.name }}</h3>
+            <span class="deck-list-item__archetype">{{ deck.archetype }}</span>
+          </div>
+          <div class="deck-list-item__meta">
+            <span class="elixir-badge">💧 {{ deck.avg_elixir }}</span>
+          </div>
+        </div>
+        }
+      </div>
+      }
+    </div>
+    }
+
+    <!-- Right Panel: Deck Details & Matchups -->
+    @if (currentDeck()) {
+    <div class="deck-details-panel">
+      <!-- Back Button -->
+      <button class="back-btn" (click)="onClearSelection()">
+        <span class="back-btn__icon">←</span>
+        <span>Back to list</span>
+      </button>
+
+      <!-- Deck Display -->
+      <div class="deck-details__deck">
+        <app-deck-display [deck]="currentDeck()!" [cardSize]="'lg'" [showMeta]="true" />
+      </div>
+
+      <!-- Loading Stats -->
+      @if (isLoading() && !currentDeckStats()) {
+      <app-loading-spinner message="Loading matchup statistics..." size="md" />
+      }
+
+      <!-- Matchup Statistics -->
+      @if (currentDeckStats()) {
+      <div class="deck-details__stats">
+        <!-- Global Stats -->
+        <div class="global-stats">
+          <div class="stat-card">
+            <span class="stat-card__label">Global Winrate</span>
+            <app-winrate-badge [winrate]="currentDeckStats()!.global_winrate" [size]="'lg'" />
+          </div>
+          <div class="stat-card">
+            <span class="stat-card__label">Meta Share</span>
+            <span class="stat-card__value">{{ currentDeckStats()!.meta_share.toFixed(1) }}%</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-card__label">Matchups</span>
+            <span class="stat-card__value">{{ currentDeckStats()!.matchups.length }}</span>
+          </div>
+        </div>
+
+        <!-- Matchups List -->
+        <div class="matchups-section">
+          <h2 class="section-title">⚔️ Matchup Statistics</h2>
+          <p class="section-subtitle">
+            Click any matchup to see Oracle tactical advice
+          </p>
+          <div class="matchups-list">
+            @for (matchup of currentDeckStats()!.matchups; track matchup.opponent_deck_id) {
+            <app-matchup-card [matchup]="matchup" [playerDeckId]="currentDeck()!.id"
+              (clicked)="onViewMatchup(currentDeck()!.id, $event)" />
+            }
+          </div>
+        </div>
+      </div>
+      }
+    </div>
+    }
+
+  </div>
+
+  <!-- Import Modal -->
+  @if (showImportModal) {
+  <div class="modal-overlay" (click)="showImportModal = false">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <h2 class="modal__title">Import Player Deck</h2>
+        <button class="modal__close" (click)="showImportModal = false">✕</button>
+      </div>
+      <div class="modal__body">
+        <p class="import-hint">
+          Enter a player tag to import their current deck
+        </p>
+        <input type="text" class="import-input" placeholder="#ABC123DE or ABC123DE" [value]="playerTag"
+          (input)="playerTag = $any($event.target).value" (keyup.enter)="onImportPlayer()" maxlength="15" />
+        @if (playerTagError) {
+        <p class="import-error">{{ playerTagError }}</p>
+        }
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--secondary" (click)="showImportModal = false">
+          Cancel
+        </button>
+        <button class="btn btn--primary" (click)="onImportPlayer()">
+          Import Deck
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+
+</div>

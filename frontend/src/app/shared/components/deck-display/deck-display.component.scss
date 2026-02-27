@@ -1,0 +1,90 @@
+/* ============================================
+   DECK DISPLAY COMPONENT STYLES
+   ============================================ */
+
+.deck-display {
+  padding: var(--spacing-md);
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-bg-tertiary);
+}
+
+/* Header */
+.deck-display__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--color-bg-tertiary);
+}
+
+.deck-display__title {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.deck-display__name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.deck-display__archetype {
+  font-size: 0.75rem;
+  color: var(--color-gold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+}
+
+.deck-display__stats {
+  display: flex;
+  gap: var(--spacing-md);
+}
+
+.deck-display__elixir {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-full);
+}
+
+.elixir-icon {
+  font-size: 0.75rem;
+}
+
+/* Cards Grid */
+.deck-display__cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-sm);
+}
+
+.deck-display__cards--clickable {
+  cursor: pointer;
+}
+
+.deck-display__cards--clickable app-card-icon:hover {
+  transform: scale(1.05);
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .deck-display__cards {
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-xs);
+  }
+
+  .deck-display__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+  }
+}

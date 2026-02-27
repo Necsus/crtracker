@@ -1,0 +1,31 @@
+{
+  "name": "crtracker-frontend",
+  "version": "1.0.0",
+  "description": "CRTracker - Strategic assistant for Clash Royale players",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test"
+  },
+  "private": true,
+  "dependencies": {
+    "@angular/animations": "^21.2.0",
+    "@angular/common": "^21.2.0",
+    "@angular/core": "^21.2.0",
+    "@angular/forms": "^21.2.0",
+    "@angular/platform-browser": "^21.2.0",
+    "@angular/platform-browser-dynamic": "^21.2.0",
+    "@angular/router": "^21.2.0",
+    "rxjs": "^7.8.0",
+    "zone.js": "^0.16.1"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^21.2.0",
+    "@angular/cli": "^21.2.0",
+    "@angular/compiler-cli": "^21.2.0",
+    "@types/node": "^22.0.0",
+    "typescript": "~5.9.0"
+  }
+}

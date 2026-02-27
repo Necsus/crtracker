@@ -1,0 +1,157 @@
+<!-- Oracle Detail Component -->
+<div class="oracle-detail">
+
+  <!-- Header -->
+  <header class="oracle-detail__header">
+    <button class="back-btn" (click)="onGoBack()">
+      <span class="back-btn__icon">←</span>
+      <span>Back to Decks</span>
+    </button>
+    <h1 class="oracle-detail__title">
+      <span class="title-icon">🔮</span>
+      <span>Oracle Matchup Analysis</span>
+    </h1>
+  </header>
+
+  <!-- Loading State -->
+  @if (isLoading() && !matchup()) {
+  <div class="loading-container">
+    <app-loading-spinner message="Consulting the Oracle..." size="lg" />
+  </div>
+  }
+
+  <!-- Error State -->
+  @if (hasError()) {
+  <div class="error-state">
+    <div class="error-banner">
+      <span class="error-banner__icon">⚠️</span>
+      <span class="error-banner__message">{{ errorMessage() }}</span>
+      <button class="error-banner__dismiss" (click)="onDismissError()">✕</button>
+    </div>
+    <button class="btn btn--primary" (click)="onRefresh()">Try Again</button>
+  </div>
+  }
+
+  <!-- Oracle Matchup Content -->
+  @if (matchup(); as matchup) {
+  <div class="oracle-content">
+
+    <!-- Matchup Overview -->
+    <section class="matchup-overview">
+      <div class="overview-header">
+        <h2 class="overview-title">Matchup Overview</h2>
+        <button class="refresh-btn" (click)="onRefresh()" title="Refresh analysis">
+          🔄
+        </button>
+      </div>
+
+      <!-- Winrate & Difficulty -->
+      <div class="matchup-summary">
+        <div class="summary-card summary-card--winrate">
+          <span class="summary-card__label">Predicted Winrate</span>
+          <app-winrate-badge [winrate]="matchup.winrate_prediction" [size]="'lg'" />
+        </div>
+        <div class="summary-card summary-card--difficulty">
+          <span class="summary-card__label">Difficulty</span>
+          <span class="difficulty-badge" [class]="'difficulty-badge--' + matchup.difficulty">
+            {{ difficultyLabel() }}
+          </span>
+        </div>
+        <div class="summary-card summary-card--advice">
+          <span class="summary-card__label">Tactical Tips</span>
+          <span class="advice-count">{{ adviceCount() }}</span>
+        </div>
+      </div>
+
+      <!-- Decks Display -->
+      <div class="decks-comparison">
+        <div class="deck-side deck-side--player">
+          <h3 class="deck-side__title">Your Deck</h3>
+          <app-deck-display [deck]="matchup.player_deck" [cardSize]="'md'" />
+        </div>
+
+        <div class="versus-divider">
+          <span class="versus-text">VS</span>
+        </div>
+
+        <div class="deck-side deck-side--opponent">
+          <h3 class="deck-side__title">Opponent</h3>
+          <app-deck-display [deck]="matchup.opponent_deck" [cardSize]="'md'" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Oracle Advice Section -->
+    <section class="oracle-advice">
+      <div class="advice-header">
+        <h2 class="advice-title">⚔️ Tactical Analysis</h2>
+        <p class="advice-subtitle">
+          Comprehensive strategy guide for this specific matchup
+        </p>
+      </div>
+
+      <!-- Grouped Advice -->
+      <div class="advice-groups">
+        @for (group of groupedAdvice(); track group.category) {
+        <div class="advice-group" [class]="'advice-group--' + group.highestPriority">
+
+          <!-- Category Header -->
+          <div class="advice-group__header">
+            <span class="priority-icon">{{ getPriorityIcon(group.highestPriority) }}</span>
+            <h3 class="advice-group__title">{{ group.category }}</h3>
+            <span class="advice-group__count">{{ group.items.length }}</span>
+          </div>
+
+          <!-- Advice Items -->
+          <div class="advice-list">
+            @for (advice of group.items; track advice.id) {
+            <div class="advice-item" [class]="'advice-item--' + advice.category.priority">
+
+              <!-- Advice Header -->
+              <div class="advice-item__header">
+                <span class="advice-priority" [title]="getPriorityLabel(advice.category.priority)">
+                  {{ getPriorityIcon(advice.category.priority) }}
+                </span>
+                <h4 class="advice-title">{{ advice.title }}</h4>
+                @if (advice.timing) {
+                <span class="advice-timing">⏱️ {{ advice.timing }}</span>
+                }
+              </div>
+
+              <!-- Advice Description -->
+              <p class="advice-description">{{ advice.description }}</p>
+
+              <!-- Related Cards -->
+              @if (advice.cards_involved.length > 0) {
+              <div class="advice-cards">
+                <span class="advice-cards__label">Key Cards:</span>
+                @for (cardId of advice.cards_involved; track cardId) {
+                <span class="advice-card">{{ getCardName(cardId) }}</span>
+                }
+              </div>
+              }
+            </div>
+            }
+          </div>
+        </div>
+        }
+      </div>
+
+      <!-- Source Info -->
+      <div class="oracle-source">
+        <span class="source-icon">{{ matchup.source === 'llm' ? '🤖' : matchup.source === 'cached' ? '💾' : '📊'
+          }}</span>
+        <span class="source-text">
+          Analysis {{ matchup.source === 'llm' ? 'generated by AI' : matchup.source === 'cached' ? 'loaded from cache' :
+          'based on Top 1000 data' }}
+        </span>
+        <span class="source-time">
+          {{ formatDate(matchup.generated_at) }}
+        </span>
+      </div>
+    </section>
+
+  </div>
+  }
+
+</div>

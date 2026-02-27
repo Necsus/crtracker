@@ -1,0 +1,24 @@
+<!-- Card Icon Component -->
+<div [ngClass]="cssClasses()" [attr.aria-label]="card().name + ' - ' + card().elixir + ' elixir'">
+
+  <!-- Card Image / Icon -->
+  @if (imageUrl()) {
+  <img [src]="imageUrl()" [alt]="card().name" class="card-icon__image" />
+  } @else {
+  <!-- Fallback placeholder with card initial -->
+  <div class="card-icon__placeholder">
+    <span class="card-icon__initial">{{ initial() }}</span>
+  </div>
+  }
+
+  <!-- Elixir Cost Badge -->
+  @if (showElixir()) {
+  <div class="card-icon__elixir" [class]="'card-icon__elixir--' + elixirColor()">
+    <span class="elixir-drop">💧</span>
+    <span class="elixir-value">{{ card().elixir }}</span>
+  </div>
+  }
+
+  <!-- Rarity Glow Border -->
+  <div class="card-icon__glow"></div>
+</div>

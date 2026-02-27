@@ -1,0 +1,14 @@
+<!-- Loading Spinner Component -->
+<div class="loading-spinner" [class]="'loading-spinner--' + size()" [class.loading-spinner--overlay]="overlay()">
+
+  <div class="spinner">
+    <div class="spinner__ring"></div>
+    <div class="spinner__ring"></div>
+    <div class="spinner__ring"></div>
+  </div>
+
+  @if (message()) {
+  <p class="loading-spinner__message">{{ message() }}</p>
+  }
+
+</div>
