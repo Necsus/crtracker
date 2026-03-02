@@ -1,27 +1,25 @@
-# CRTracker CI/CD Pipeline
-# Builds Docker images, pushes to registry, and deploys to K3s via Tailscale
-
-name: Build and Deploy CRTracker
+name: Build and Deploy App
 
 on:
+  workflow_dispatch:  # Déclenchement manuel
   push:
     branches:
-      - main
       - recette
-  workflow_dispatch:
+    paths:
+      - 'frontend/**'
+      - 'backend/**'
+      - 'k8s/**'
+      - '.github/workflows/deploy-app.yml'
 
 env:
+  GEEKOM_HOST: 100.108.255.93
   REGISTRY: registry.necsus.dev
-  BACKEND_IMAGE: registry.necsus.dev/crtracker/backend
-  FRONTEND_IMAGE: registry.necsus.dev/crtracker/frontend
-  KUBECONFIG_PATH: /tmp/kubeconfig-crtracker
+  APP_NAME: crtracker
+  NAMESPACE: crtracker
 
 jobs:
-  # ============================================================
-  # JOB 1: Build and Push Docker Images
-  # ============================================================
   build-and-push:
-    name: Build & Push Images
+    name: Build Docker Images
     runs-on: ubuntu-latest
 
     steps:
@@ -30,186 +28,154 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-        with:
-          driver-opts: |
-            image=moby/buildkit:latest
-            network=host
 
-      - name: Login to registry
+      - name: Log in to private registry
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
 
-      - name: Extract metadata for backend
-        id: meta-backend
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.BACKEND_IMAGE }}
-          tags: |
-            type=sha,prefix={{branch}}-
-            type=raw,value=latest,enable={{is_default_branch}}
-
-      - name: Extract metadata for frontend
-        id: meta-frontend
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.FRONTEND_IMAGE }}
-          tags: |
-            type=sha,prefix={{branch}}-
-            type=raw,value=latest,enable={{is_default_branch}}
-
-      - name: Build and push backend
-        uses: docker/build-push-action@v5
-        with:
-          context: ./backend
-          push: true
-          tags: ${{ steps.meta-backend.outputs.tags }}
-          labels: ${{ steps.meta-backend.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.BACKEND_IMAGE }}:buildcache
-          cache-to: type=registry,ref=${{ env.BACKEND_IMAGE }}:buildcache,mode=max
+      - name: Generate image tags
+        id: meta
+        run: |
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          echo "tags=${{ env.REGISTRY }}/${{ env.APP_NAME }}/frontend:${SHORT_SHA},${{ env.REGISTRY }}/${{ env.APP_NAME }}/frontend:latest" >> $GITHUB_OUTPUT
+          echo "backend_tags=${{ env.REGISTRY }}/${{ env.APP_NAME }}/backend:${SHORT_SHA},${{ env.REGISTRY }}/${{ env.APP_NAME }}/backend:latest" >> $GITHUB_OUTPUT
+          echo "short_sha=${SHORT_SHA}" >> $GITHUB_OUTPUT
 
       - name: Build and push frontend
         uses: docker/build-push-action@v5
         with:
           context: ./frontend
           push: true
-          tags: ${{ steps.meta-frontend.outputs.tags }}
-          labels: ${{ steps.meta-frontend.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.FRONTEND_IMAGE }}:buildcache
-          cache-to: type=registry,ref=${{ env.FRONTEND_IMAGE }}:buildcache,mode=max
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.APP_NAME }}/frontend:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.APP_NAME }}/frontend:buildcache,mode=max
 
-      - name: Image digest output
-        run: |
-          echo "Backend pushed!"
-          echo "Frontend pushed!"
+      - name: Build and push backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: ${{ steps.meta.outputs.backend_tags }}
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.APP_NAME }}/backend:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.APP_NAME }}/backend:buildcache,mode=max
 
-  # ============================================================
-  # JOB 2: Deploy to Kubernetes (K3s)
-  # ============================================================
+    outputs:
+      short_sha: ${{ steps.meta.outputs.short_sha }}
+
   deploy:
     name: Deploy to K3s
-    runs-on: ubuntu-latest
     needs: build-and-push
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # ============================================================
-      # TAILSKALE CONNECTION TO CLUSTER
-      # ============================================================
-      - name: Connect to K3s via Tailscale
+      - name: Connect Tailscale
         uses: tailscale/github-action@v2
         with:
-          oauth-client-id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
-          oauth-client-secret: ${{ secrets.TAILSCALE_OAUTH_CLIENT_SECRET }}
-          tags: ci:crtracker
-          timeout: 10m
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
 
-      - name: Verify Tailscale connection
+      - name: Setup kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      - name: Configure kubectl
         run: |
-          tailscale ip -4
-          echo "Connected to Tailscale network"
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG }}" | base64 -d > ~/.kube/config
+          chmod 600 ~/.kube/config
+          sed -i "s/127.0.0.1/${{ env.GEEKOM_HOST }}/g" ~/.kube/config
+          sed -i "s/localhost/${{ env.GEEKOM_HOST }}/g" ~/.kube/config
 
-      # ============================================================
-      # KUBECTL CONFIGURATION
-      # ============================================================
-      - name: Install kubectl
-        run: |
-          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
-          chmod +x kubectl
-          sudo mv kubectl /usr/local/bin/
-
-      - name: Setup kubeconfig
-        run: |
-          mkdir -p $(dirname ${{ env.KUBECONFIG_PATH }})
-          echo "${{ secrets.KUBECONFIG }}" | base64 -d > ${{ env.KUBECONFIG_PATH }}
-          export KUBECONFIG=${{ env.KUBECONFIG_PATH }}
-
-      - name: Verify cluster connection
-        run: |
-          export KUBECONFIG=${{ env.KUBECONFIG_PATH }}
-          kubectl cluster-info
-          kubectl get nodes
-
-      # ============================================================
-      # KUBERNETES DEPLOYMENT
-      # ============================================================
       - name: Create namespace
         run: |
-          export KUBECONFIG=${{ env.KUBECONFIG_PATH }}
           kubectl apply -f k8s/namespace.yaml
 
-      - name: Create Docker registry secret
+      - name: Create registry pull secret
         run: |
-          export KUBECONFIG=${{ env.KUBECONFIG_PATH }}
-          kubectl delete secret registry-credentials -n crtracker --ignore-not-found
           kubectl create secret docker-registry registry-credentials \
             --docker-server=${{ env.REGISTRY }} \
             --docker-username=${{ secrets.REGISTRY_USERNAME }} \
             --docker-password=${{ secrets.REGISTRY_PASSWORD }} \
-            -n crtracker
+            --namespace=${{ env.NAMESPACE }} \
+            --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Create application secrets
         run: |
-          export KUBECONFIG=${{ env.KUBECONFIG_PATH }}
-          kubectl apply -f k8s/secrets-template.yaml
+          if [ -z "${{ secrets.DATABASE_URL }}" ]; then
+            echo "ERROR: DATABASE_URL secret is not set!" >&2
+            exit 1
+          fi
+          if [ -z "${{ secrets.SECRET_KEY }}" ]; then
+            echo "ERROR: SECRET_KEY secret is not set!" >&2
+            echo "Generate with: openssl rand -base64 32" >&2
+            exit 1
+          fi
 
-      - name: Deploy Kubernetes manifests
+          kubectl create secret generic ${{ env.APP_NAME }}-backend-secrets \
+            --from-literal=DATABASE_URL="${{ secrets.DATABASE_URL }}" \
+            --from-literal=SECRET_KEY="${{ secrets.SECRET_KEY }}" \
+            --from-literal=OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
+            --from-literal=GROQ_API_KEY="${{ secrets.GROQ_API_KEY }}" \
+            --from-literal=LLM_PROVIDER="${{ vars.LLM_PROVIDER }}" \
+            --from-literal=LLM_MODEL="${{ vars.LLM_MODEL }}" \
+            --from-literal=DEBUG="${{ vars.DEBUG }}" \
+            --from-literal=ENVIRONMENT="production" \
+            --namespace=${{ env.NAMESPACE }} \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Init application database
         run: |
-          export KUBECONFIG=${{ env.KUBECONFIG_PATH }}
+          kubectl apply -f k8s/db-init-job.yaml
+
+          kubectl wait --for=condition=complete --timeout=90s job/db-migrate -n ${{ env.NAMESPACE }} || true
+          kubectl logs job/db-migrate -n ${{ env.NAMESPACE }} || true
+          kubectl delete job/db-migrate -n ${{ env.NAMESPACE }} || true
+
+      - name: Deploy backend
+        run: |
           kubectl apply -f k8s/backend/
+          kubectl set image deployment/backend backend=${{ env.REGISTRY }}/${{ env.APP_NAME }}/backend:${{ needs.build-and-push.outputs.short_sha }} -n ${{ env.NAMESPACE }}
+
+      - name: Deploy frontend
+        run: |
           kubectl apply -f k8s/frontend/
+          kubectl set image deployment/frontend frontend=${{ env.REGISTRY }}/${{ env.APP_NAME }}/frontend:${{ needs.build-and-push.outputs.short_sha }} -n ${{ env.NAMESPACE }}
+
+      - name: Deploy ingress
+        run: |
           kubectl apply -f k8s/ingress.yaml
 
-      - name: Run database migrations
+      - name: Wait for deployments
         run: |
-          export KUBECONFIG=${{ env.KUBECONFIG_PATH }}
-          kubectl delete job db-migrate -n crtracker --ignore-not-found
-          kubectl apply -f k8s/db-init-job.yaml
-          kubectl wait --for=condition=complete --timeout=120s job/db-migrate -n crtracker
+          kubectl rollout status deployment/backend -n ${{ env.NAMESPACE }} --timeout=5m
+          kubectl rollout status deployment/frontend -n ${{ env.NAMESPACE }} --timeout=5m
 
-      - name: Wait for deployment rollout
+      - name: Wait for certificates
         run: |
-          export KUBECONFIG=${{ env.KUBECONFIG_PATH }}
-          kubectl rollout status deployment/backend -n crtracker --timeout=300s
-          kubectl rollout status deployment/frontend -n crtracker --timeout=180s
+          echo "Waiting for certificates..."
+          sleep 30
+          kubectl get certificate -n ${{ env.NAMESPACE }}
 
-      - name: Verify deployment
-        run: |
-          export KUBECONFIG=${{ env.KUBECONFIG_PATH }}
-          echo "=== Backend Pods ==="
-          kubectl get pods -n crtracker -l app=crtracker,component=backend
-          echo ""
-          echo "=== Frontend Pods ==="
-          kubectl get pods -n crtracker -l app=crtracker,component=frontend
-          echo ""
-          echo "=== Services ==="
-          kubectl get svc -n crtracker
-          echo ""
-          echo "=== Ingress ==="
-          kubectl get ingress -n crtracker
-
-      - name: Rollback on failure
-        if: failure()
-        run: |
-          export KUBECONFIG=${{ env.KUBECONFIG_PATH }}
-          echo "Deployment failed. Rolling back..."
-          kubectl rollout undo deployment/backend -n crtracker || true
-          kubectl rollout undo deployment/frontend -n crtracker || true
-
-      # ============================================================
-      # NOTIFICATION (OPTIONAL)
-      # ============================================================
       - name: Deployment summary
-        if: always()
         run: |
-          echo "================================"
-          echo "Deployment Summary"
-          echo "================================"
-          echo "Status: ${{ job.status }}"
-          echo "Registry: ${{ env.REGISTRY }}"
-          echo "Namespace: crtracker"
-          echo "================================"
+          echo "=== Deployment Summary ==="
+          echo "Frontend: https://${{ env.APP_NAME }}.necsus.dev"
+          echo "Backend API: https://api-${{ env.APP_NAME }}.necsus.dev"
+          echo ""
+          echo "Pods:"
+          kubectl get pods -n ${{ env.NAMESPACE }}
+          echo ""
+          echo "Services:"
+          kubectl get svc -n ${{ env.NAMESPACE }}
+          echo ""
+          echo "Ingress:"
+          kubectl get ingress -n ${{ env.NAMESPACE }}
+          echo ""
+          echo "Certificates:"
+          kubectl get certificate -n ${{ env.NAMESPACE }}
