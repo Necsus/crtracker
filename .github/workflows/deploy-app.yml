@@ -141,11 +141,13 @@ jobs:
         run: |
           kubectl apply -f k8s/backend/
           kubectl set image deployment/backend backend=${{ env.REGISTRY }}/${{ env.APP_NAME }}/backend:${{ needs.build-and-push.outputs.short_sha }} -n ${{ env.NAMESPACE }}
+          kubectl rollout restart deployment/backend -n ${{ env.NAMESPACE }}
 
       - name: Deploy frontend
         run: |
           kubectl apply -f k8s/frontend/
           kubectl set image deployment/frontend frontend=${{ env.REGISTRY }}/${{ env.APP_NAME }}/frontend:${{ needs.build-and-push.outputs.short_sha }} -n ${{ env.NAMESPACE }}
+          kubectl rollout restart deployment/frontend -n ${{ env.NAMESPACE }}
 
       - name: Deploy ingress
         run: |
@@ -153,8 +155,18 @@ jobs:
 
       - name: Wait for deployments
         run: |
-          kubectl rollout status deployment/backend -n ${{ env.NAMESPACE }} --timeout=5m
-          kubectl rollout status deployment/frontend -n ${{ env.NAMESPACE }} --timeout=5m
+          if ! kubectl rollout status deployment/backend -n ${{ env.NAMESPACE }} --timeout=5m; then
+            echo "=== Backend rollout FAILED ==="
+            kubectl get pods -n ${{ env.NAMESPACE }} -l component=backend
+            kubectl describe pods -n ${{ env.NAMESPACE }} -l component=backend | tail -40
+            exit 1
+          fi
+          if ! kubectl rollout status deployment/frontend -n ${{ env.NAMESPACE }} --timeout=5m; then
+            echo "=== Frontend rollout FAILED ==="
+            kubectl get pods -n ${{ env.NAMESPACE }} -l component=frontend
+            kubectl describe pods -n ${{ env.NAMESPACE }} -l component=frontend | tail -40
+            exit 1
+          fi
 
       - name: Wait for certificates
         run: |
