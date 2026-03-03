@@ -1,6 +1,4 @@
-# CRTracker Frontend Service
-# ClusterIP service for internal communication
-
+---
 apiVersion: v1
 kind: Service
 metadata:
@@ -11,11 +9,32 @@ metadata:
     component: frontend
 spec:
   type: ClusterIP
-  ports:
-    - name: http
-      port: 80
-      targetPort: http
-      protocol: TCP
   selector:
     app: crtracker
     component: frontend
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+    protocol: TCP
+  sessionAffinity: None
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: crtracker
+  labels:
+    app: crtracker
+    component: frontend
+spec:
+  type: ClusterIP
+  selector:
+    app: crtracker
+    component: frontend
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+    protocol: TCP
+  sessionAffinity: None
