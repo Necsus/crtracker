@@ -1,10 +1,12 @@
-# CRTracker Database Initialization Job
-# Runs Alembic migrations to setup database schema
-
+---
+# Job d'initialisation de la base applicative.
+# - Se connecte avec un compte admin fourni par POSTGRES_ADMIN_URL
+# - Crée l'utilisateur/app DB cible si absent (ou met à jour son mot de passe)
+# - Crée la base si absente et assigne les droits
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: db-migrate
+  name: db-init
   namespace: crtracker
   labels:
     app: crtracker
@@ -18,46 +20,82 @@ spec:
         app: crtracker
         component: db-init
     spec:
-      restartPolicy: OnFailure
-      imagePullSecrets:
-        - name: registry-credentials
+      restartPolicy: Never
       containers:
-        - name: alembic
-          image: registry.necsus.dev/crtracker/backend:latest
-          command:
-            - /bin/sh
-            - -c
-            - |
-              echo "Running Alembic migrations..."
-              alembic upgrade head
-              echo "Migrations completed successfully!"
-          envFrom:
-            - secretRef:
-                name: crtracker-backend-secrets
+      - name: db-init
+        image: postgres:18-alpine
+        env:
+        - name: POSTGRES_ADMIN_URL
+          valueFrom:
+            secretKeyRef:
+              name: crtracker-db-admin
+              key: POSTGRES_ADMIN_URL
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: crtracker-backend-secrets
+              key: DATABASE_URL
+        command:
+        - /bin/sh
+        - -c
+        - |
+          set -euo pipefail
+          echo "=== DB init: parsing app connection info ==="
+          
+          APP_USER=$(echo "$DATABASE_URL" | sed 's/.*:\/\/\([^:]*\):.*/\1/')
+          APP_PASS=$(echo "$DATABASE_URL" | sed 's/.*:\/\/[^:]*:\([^@]*\)@.*/\1/')
+          APP_HOST=$(echo "$DATABASE_URL" | sed 's/.*@\([^:]*\):.*/\1/')
+          APP_PORT=$(echo "$DATABASE_URL" | sed 's/.*:\([0-9]*\)\/.*/\1/')
+          APP_DB=$(echo "$DATABASE_URL" | sed 's/.*\/\([^?]*\).*/\1/')
+          
+          if [ -z "$POSTGRES_ADMIN_URL" ]; then
+            echo "ERROR: POSTGRES_ADMIN_URL is empty" >&2
+            exit 1
+          fi
+          
+          echo "Target DB: $APP_DB"
+          echo "Target user: $APP_USER"
+          echo "Host: $APP_HOST:$APP_PORT"
+          
+          echo "=== Checking admin connectivity ==="
+          if ! psql "$POSTGRES_ADMIN_URL" -c "SELECT 1" >/dev/null 2>&1; then
+            echo "ERROR: cannot connect with POSTGRES_ADMIN_URL" >&2
+            exit 1
+          fi
+          
+          echo "=== Creating/altering role ==="
+          psql "$POSTGRES_ADMIN_URL" -v ON_ERROR_STOP=1 -c "
+          DO \$\$
+          BEGIN
+             IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '$APP_USER') THEN
+                EXECUTE format('CREATE ROLE %I LOGIN PASSWORD %L', '$APP_USER', '$APP_PASS');
+             ELSE
+                EXECUTE format('ALTER ROLE %I WITH LOGIN PASSWORD %L', '$APP_USER', '$APP_PASS');
+             END IF;
+          END\$\$;
+          "
+          
+          echo "=== Creating database if needed ==="
+          DB_EXISTS=$(psql "$POSTGRES_ADMIN_URL" -tAc "SELECT 1 FROM pg_database WHERE datname='$APP_DB'")
+          if [ "$DB_EXISTS" != "1" ]; then
+            echo "Creating database $APP_DB..."
+            psql "$POSTGRES_ADMIN_URL" -v ON_ERROR_STOP=1 -c "CREATE DATABASE \"$APP_DB\" OWNER \"$APP_USER\" ENCODING 'UTF8' LC_COLLATE 'C' LC_CTYPE 'C' TEMPLATE template0;"
+          else
+            echo "Database $APP_DB already exists"
+          fi
+          
+          echo "=== Granting privileges on schema/tables ==="
+          DB_URL=$(echo "$POSTGRES_ADMIN_URL" | sed "s|/[^/]*$|/$APP_DB|")
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -c "GRANT ALL ON SCHEMA public TO \"$APP_USER\";"
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO \"$APP_USER\";"
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO \"$APP_USER\";"
+          
+          echo "✅ DB init completed"
 
-          resources:
-            requests:
-              memory: "64Mi"
-              cpu: "50m"
-            limits:
-              memory: "128Mi"
-              cpu: "100m"
-
----
-# Alternative: InitContainer approach (uncomment if preferred)
-# This would run migrations before starting the backend pod
-# apiVersion: apps/v1
-# kind: Deployment
-# metadata:
-#   name: backend
-#   namespace: crtracker
-# spec:
-#   template:
-#     spec:
-#       initContainers:
-#         - name: db-migrate
-#           image: registry.necsus.dev/crtracker/backend:latest
-#           command: ['alembic', 'upgrade', 'head']
-#           envFrom:
-#             - secretRef:
-#                 name: crtracker-secrets
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"

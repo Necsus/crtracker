@@ -1,6 +1,4 @@
-# CRTracker Backend Service
-# ClusterIP service for internal communication
-
+---
 apiVersion: v1
 kind: Service
 metadata:
@@ -11,31 +9,12 @@ metadata:
     component: backend
 spec:
   type: ClusterIP
+  selector:
+    app: crtracker
+    component: backend
   ports:
-    - name: http
-      port: 8000
-      targetPort: http
-      protocol: TCP
-  selector:
-    app: crtracker
-    component: backend
-
----
-# ServiceMonitor for Prometheus (if using Prometheus Operator)
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  name: backend
-  namespace: crtracker
-  labels:
-    app: crtracker
-    component: backend
-spec:
-  selector:
-    matchLabels:
-      app: crtracker
-      component: backend
-  endpoints:
-    - port: http
-      path: /metrics
-      interval: 30s
+  - name: http
+    port: 8000
+    targetPort: http
+    protocol: TCP
+  sessionAffinity: None

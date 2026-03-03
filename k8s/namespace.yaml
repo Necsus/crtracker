@@ -1,8 +1,8 @@
-# CRTracker Namespace
+---
 apiVersion: v1
 kind: Namespace
 metadata:
   name: crtracker
   labels:
+    name: crtracker
     app: crtracker
-    environment: production
