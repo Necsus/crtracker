@@ -98,7 +98,7 @@ spec:
 
             # CORS
             - name: ALLOWED_ORIGINS
-              value: "https://crtracker.necsus.dev,https://api-crtracker.necsus.dev"
+              value: '["https://crtracker.necsus.dev","https://api-crtracker.necsus.dev"]'
 
           # Health Check
           livenessProbe:

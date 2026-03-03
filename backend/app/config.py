@@ -2,7 +2,7 @@
 
 from functools import lru_cache
 
-from pydantic import Field, MySQLDsn, PositiveInt
+from pydantic import Field, PositiveInt
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
