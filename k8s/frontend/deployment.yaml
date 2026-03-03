@@ -30,7 +30,7 @@ spec:
         - name: registry-credentials
 
       containers:
-        - name: nginx
+        - name: frontend
           image: registry.necsus.dev/crtracker/frontend:latest
           imagePullPolicy: Always
 
