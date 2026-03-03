@@ -45,32 +45,22 @@ spec:
 
           env:
             # Application
-            - name: APP_NAME
-              valueFrom:
-                secretKeyRef:
-                  name: crtracker-secrets
-                  key: APP_NAME
-            - name: APP_VERSION
-              valueFrom:
-                secretKeyRef:
-                  name: crtracker-secrets
-                  key: APP_VERSION
             - name: ENVIRONMENT
               valueFrom:
                 secretKeyRef:
-                  name: crtracker-secrets
+                  name: crtracker-backend-secrets
                   key: ENVIRONMENT
             - name: DEBUG
               valueFrom:
                 secretKeyRef:
-                  name: crtracker-secrets
+                  name: crtracker-backend-secrets
                   key: DEBUG
 
             # Database
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
-                  name: crtracker-secrets
+                  name: crtracker-backend-secrets
                   key: DATABASE_URL
             - name: DATABASE_ECHO
               value: "false"
@@ -79,7 +69,7 @@ spec:
             - name: SECRET_KEY
               valueFrom:
                 secretKeyRef:
-                  name: crtracker-secrets
+                  name: crtracker-backend-secrets
                   key: SECRET_KEY
             - name: ACCESS_TOKEN_EXPIRE_MINUTES
               value: "10080"
@@ -88,22 +78,22 @@ spec:
             - name: OPENAI_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: crtracker-secrets
+                  name: crtracker-backend-secrets
                   key: OPENAI_API_KEY
             - name: GROQ_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: crtracker-secrets
+                  name: crtracker-backend-secrets
                   key: GROQ_API_KEY
             - name: LLM_PROVIDER
               valueFrom:
                 secretKeyRef:
-                  name: crtracker-secrets
+                  name: crtracker-backend-secrets
                   key: LLM_PROVIDER
             - name: LLM_MODEL
               valueFrom:
                 secretKeyRef:
-                  name: crtracker-secrets
+                  name: crtracker-backend-secrets
                   key: LLM_MODEL
 
             # CORS

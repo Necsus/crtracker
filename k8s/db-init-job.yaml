@@ -33,7 +33,7 @@ spec:
               echo "Migrations completed successfully!"
           envFrom:
             - secretRef:
-                name: crtracker-secrets
+                name: crtracker-backend-secrets
 
           resources:
             requests:
