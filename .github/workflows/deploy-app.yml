@@ -138,7 +138,7 @@ jobs:
             --from-literal=LLM_MODEL="${{ vars.LLM_MODEL || 'llama-3.3-70b-versatile' }}" \
             --from-literal=DEBUG="${{ vars.DEBUG || 'false' }}" \
             --from-literal=ENVIRONMENT="production" \
-            --namespace=${{ env.NAMESPACE }} \
+            --from-literal=ALLOWED_ORIGINS='${{ vars.ALLOWED_ORIGINS }}' \
             --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Init application database

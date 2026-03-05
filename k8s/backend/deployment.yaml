@@ -83,6 +83,11 @@ spec:
             secretKeyRef:
               name: crtracker-backend-secrets
               key: LLM_MODEL
+        - name: ALLOWED_ORIGINS
+          valueFrom:
+            secretKeyRef:
+              name: crtracker-backend-secrets
+              key: ALLOWED_ORIGINS
 
         resources:
           requests:
