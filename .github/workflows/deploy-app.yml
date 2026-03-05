@@ -144,12 +144,22 @@ jobs:
 
       - name: Init application database
         run: |
-          kubectl delete job db-init -n crtracker --ignore-not-found
+          kubectl delete job db-init -n ${{ env.NAMESPACE }} --ignore-not-found
           kubectl apply -f k8s/db-init-job.yaml
 
-          kubectl wait --for=condition=complete --timeout=90s job/db-init -n ${{ env.NAMESPACE }} || true
-          kubectl logs job/db-init -n ${{ env.NAMESPACE }} || true
-          kubectl delete job/db-init -n ${{ env.NAMESPACE }} || true
+          echo "=== Waiting for db-init job ==="
+          if ! kubectl wait --for=condition=complete --timeout=120s job/db-init -n ${{ env.NAMESPACE }}; then
+            echo "=== db-init FAILED or timed out — full logs: ==="
+            kubectl logs job/db-init -n ${{ env.NAMESPACE }} || true
+            kubectl describe job/db-init -n ${{ env.NAMESPACE }} || true
+            kubectl describe pods -n ${{ env.NAMESPACE }} -l job-name=db-init || true
+            kubectl delete job db-init -n ${{ env.NAMESPACE }} --ignore-not-found
+            exit 1
+          fi
+
+          echo "=== db-init succeeded — logs: ==="
+          kubectl logs job/db-init -n ${{ env.NAMESPACE }}
+          kubectl delete job db-init -n ${{ env.NAMESPACE }} --ignore-not-found
 
       - name: Deploy backend
         run: |
