@@ -21,20 +21,17 @@ class Settings(BaseSettings):
     app_version: str = Field(default="1.0.0", description="API version")
     debug: bool = Field(default=False, description="Debug mode")
     environment: str = Field(
-        default="development",
         description="Environment (development, staging, production)",
     )
 
     # Database
     database_url: str = Field(
-        default="postgresql+asyncpg://crtracker:crtracker@localhost:5432/crtracker_db",
         description="PostgreSQL database URL (async)",
     )
     database_echo: bool = Field(default=False, description="Echo SQL queries")
 
     # Security
     secret_key: str = Field(
-        default="change-this-secret-key-in-production",
         description="Secret key for JWT encoding",
     )
     access_token_expire_minutes: PositiveInt = Field(
@@ -56,7 +53,6 @@ class Settings(BaseSettings):
 
     # CORS
     allowed_origins: list[str] = Field(
-        default=["http://localhost:4200", "http://localhost"],
         description="Allowed CORS origins",
     )
 

@@ -105,6 +105,18 @@ jobs:
             --namespace=${{ env.NAMESPACE }} \
             --dry-run=client -o yaml | kubectl apply -f -
 
+      - name: Create DB admin secret
+        run: |
+          if [ -z "${{ secrets.POSTGRES_ADMIN_URL }}" ]; then
+            echo "ERROR: POSTGRES_ADMIN_URL secret is not set!" >&2
+            exit 1
+          fi
+
+          kubectl create secret generic ${{ env.APP_NAME }}-db-admin \
+            --from-literal=POSTGRES_ADMIN_URL="${{ secrets.POSTGRES_ADMIN_URL }}" \
+            --namespace=${{ env.NAMESPACE }} \
+            --dry-run=client -o yaml | kubectl apply -f -
+
       - name: Create application secrets
         run: |
           if [ -z "${{ secrets.DATABASE_URL }}" ]; then
@@ -133,9 +145,9 @@ jobs:
         run: |
           kubectl apply -f k8s/db-init-job.yaml
 
-          kubectl wait --for=condition=complete --timeout=90s job/db-migrate -n ${{ env.NAMESPACE }} || true
-          kubectl logs job/db-migrate -n ${{ env.NAMESPACE }} || true
-          kubectl delete job/db-migrate -n ${{ env.NAMESPACE }} || true
+          kubectl wait --for=condition=complete --timeout=90s job/db-init -n ${{ env.NAMESPACE }} || true
+          kubectl logs job/db-init -n ${{ env.NAMESPACE }} || true
+          kubectl delete job/db-init -n ${{ env.NAMESPACE }} || true
 
       - name: Deploy backend
         run: |
