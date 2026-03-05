@@ -2,7 +2,7 @@
 
 from functools import lru_cache
 
-from pydantic import Field, PositiveInt
+from pydantic import Field, PositiveInt, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -53,9 +53,19 @@ class Settings(BaseSettings):
     )
 
     # CORS
-    allowed_origins: list[str] = Field(
-        description="Allowed CORS origins",
+    # Union avec str active allow_parse_failure dans pydantic-settings 2.x :
+    # si json.loads échoue sur une valeur comme "url1,url2", la string brute
+    # est passée au field_validator qui la découpe par virgule.
+    allowed_origins: list[str] | str = Field(
+        description="Allowed CORS origins (comma-separated string or JSON array)",
     )
+
+    @field_validator("allowed_origins", mode="before")
+    @classmethod
+    def parse_allowed_origins(cls, v: object) -> list[str]:
+        if isinstance(v, str):
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        return v  # type: ignore[return-value]
 
     # Pagination
     default_page_size: PositiveInt = Field(
