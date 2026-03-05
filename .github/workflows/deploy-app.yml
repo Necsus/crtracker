@@ -144,6 +144,7 @@ jobs:
 
       - name: Init application database
         run: |
+          kubectl delete job db-init -n crtracker --ignore-not-found
           kubectl apply -f k8s/db-init-job.yaml
 
           kubectl wait --for=condition=complete --timeout=90s job/db-init -n ${{ env.NAMESPACE }} || true
