@@ -100,4 +100,11 @@ export class DeckDal {
     const url = buildUrl(`${this.basePath}/cards`, params);
     return this.http.get<CardApiItem[]>(url);
   }
+
+  /**
+   * Get full details for a single card by its CR numeric ID
+   */
+  getCard(cardId: string): Observable<CardApiItem> {
+    return this.http.get<CardApiItem>(`${this.basePath}/cards/${cardId}`);
+  }
 }

@@ -91,9 +91,9 @@
     } @else {
     <div class="cards-grid">
       @for (card of displayCards(); track card.id) {
-      <div class="card-entry flex flex-col items-center gap-2">
+      <a [routerLink]="['/cards', card.id]" class="card-entry flex flex-col items-center gap-2">
         <app-card-icon [card]="card" size="lg" [showElixir]="true" />
-      </div>
+      </a>
       }
     </div>
     }

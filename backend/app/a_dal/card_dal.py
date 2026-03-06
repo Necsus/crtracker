@@ -51,16 +51,7 @@ class CardDAL(BaseDAL[Card]):
         offset: int = 0,
         limit: int = 100,
     ) -> Sequence[Card]:
-        """Search cards by name (case-insensitive substring).
-
-        Args:
-            query: Search term
-            offset: Pagination offset
-            limit: Maximum rows to return
-
-        Returns:
-            Sequence of matching Card ORM instances
-        """
+        """Search cards by name (case-insensitive substring)."""
         stmt = (
             select(Card)
             .where(Card.name.ilike(f"%{query}%"))
@@ -70,3 +61,9 @@ class CardDAL(BaseDAL[Card]):
         )
         result: Result = await self.session.execute(stmt)
         return result.scalars().all()
+
+    async def get_by_card_id(self, card_id: int) -> Card | None:
+        """Return a card by its CR API numeric ID (card_id column)."""
+        stmt = select(Card).where(Card.card_id == card_id)
+        result: Result = await self.session.execute(stmt)
+        return result.scalars().first()

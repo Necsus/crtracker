@@ -71,7 +71,8 @@
 }
 
 .card-entry {
-  cursor: default;
+  cursor: pointer;
+  text-decoration: none;
   transition: transform 0.15s ease;
 
   &:hover {

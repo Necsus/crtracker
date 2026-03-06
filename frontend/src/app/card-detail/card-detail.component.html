@@ -1,0 +1,164 @@
+<!-- Card Detail — Clash Royale Theme -->
+<div class="min-h-screen font-cr py-8 px-4">
+  <div class="max-w-4xl mx-auto">
+
+    <!-- ══ BACK LINK ══ -->
+    <a routerLink="/cards" class="back-link inline-flex items-center gap-2 mb-8 text-sm font-bold transition-all">
+      ← Back to Card Catalogue
+    </a>
+
+    <!-- ══ LOADING ══ -->
+    @if (loading()) {
+    <div class="flex justify-center py-32">
+      <app-loading-spinner />
+    </div>
+    }
+
+    <!-- ══ ERROR ══ -->
+    @if (error()) {
+    <div class="text-center py-32">
+      <p class="text-5xl mb-4">⚠️</p>
+      <p class="text-lg font-bold" style="color: #c06040;">{{ error() }}</p>
+      <a routerLink="/cards" class="back-link inline-block mt-6 text-sm font-bold px-5 py-2 rounded-xl transition-all">
+        ← Return to Catalogue
+      </a>
+    </div>
+    }
+
+    <!-- ══ CARD CONTENT ══ -->
+    @if (!loading() && !error() && card()) {
+    @let c = card()!;
+
+    <!-- ── HERO BANNER ───────────────────────────────── -->
+    <div class="hero-banner rounded-2xl p-6 mb-6 flex flex-col sm:flex-row items-center sm:items-start gap-6">
+
+      <!-- Card Icon (large) -->
+      <div class="shrink-0">
+        <app-card-icon [card]="asCard(c)" size="lg" [showElixir]="true" />
+      </div>
+
+      <!-- Card Info -->
+      <div class="flex-1 text-center sm:text-left">
+        <h1 class="text-3xl font-black tracking-wide mb-2 cr-title-gradient">{{ c.name }}</h1>
+
+        <!-- Badges row -->
+        <div class="flex flex-wrap justify-center sm:justify-start gap-2 mb-4">
+          <span class="badge-pill" [ngClass]="rarityClass(c.rarity)">
+            {{ rarityEmoji(c.rarity) }} {{ c.rarity | titlecase }}
+          </span>
+          @if (c.type) {
+          <span class="badge-pill badge-type">
+            {{ typeEmoji(c.type) }} {{ c.type | titlecase }}
+          </span>
+          }
+          <span class="badge-pill badge-elixir">
+            <span class="elixir-dot">⬡</span> {{ c.elixir }} Elixir
+          </span>
+        </div>
+
+        <!-- Description -->
+        @if (c.description) {
+        <p class="card-description text-sm leading-relaxed">{{ c.description }}</p>
+        }
+      </div>
+    </div>
+
+    <!-- ── QUICK STATS STRIP ─────────────────────────── -->
+    <div class="stats-strip grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+
+      <div class="stat-box rounded-xl p-4 text-center">
+        <p class="stat-label text-xs font-bold uppercase tracking-widest mb-1">Elixir Cost</p>
+        <p class="stat-value text-2xl font-black" style="color: #b030e0;">{{ c.elixir }}</p>
+      </div>
+
+      <div class="stat-box rounded-xl p-4 text-center">
+        <p class="stat-label text-xs font-bold uppercase tracking-widest mb-1">Rarity</p>
+        <p class="stat-value text-sm font-black" [ngClass]="rarityClass(c.rarity)">
+          {{ rarityEmoji(c.rarity) }} {{ c.rarity | titlecase }}
+        </p>
+      </div>
+
+      <div class="stat-box rounded-xl p-4 text-center">
+        <p class="stat-label text-xs font-bold uppercase tracking-widest mb-1">Type</p>
+        <p class="stat-value text-sm font-black" style="color: #f6c237;">
+          {{ typeEmoji(c.type) }} {{ (c.type | titlecase) || '—' }}
+        </p>
+      </div>
+
+      <div class="stat-box rounded-xl p-4 text-center">
+        <p class="stat-label text-xs font-bold uppercase tracking-widest mb-1">Win Rate</p>
+        <app-winrate-badge [winrate]="mockStats.win_rate_with" size="md" />
+      </div>
+
+    </div>
+
+    <!-- ── META STATISTICS (mocked) ─────────────────── -->
+    <div class="section-card rounded-2xl p-6 mb-6">
+      <h2 class="section-title text-lg font-black tracking-wide mb-5 flex items-center gap-2">
+        📊 <span class="cr-title-gradient">Meta Statistics</span>
+        <span class="mock-badge text-xs font-bold px-2 py-0.5 rounded-full ml-auto">Mock Data</span>
+      </h2>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+
+        <div class="meta-stat-box rounded-xl p-4">
+          <p class="stat-label text-xs font-bold uppercase tracking-widest mb-1">Usage Rate</p>
+          <p class="text-xl font-black" style="color: #f6c237;">{{ mockStats.usage_rate }}%</p>
+        </div>
+
+        <div class="meta-stat-box rounded-xl p-4">
+          <p class="stat-label text-xs font-bold uppercase tracking-widest mb-1">Win Rate With</p>
+          <p class="text-xl font-black" style="color: #40d080;">{{ mockStats.win_rate_with }}%</p>
+        </div>
+
+        <div class="meta-stat-box rounded-xl p-4">
+          <p class="stat-label text-xs font-bold uppercase tracking-widest mb-1">Avg Deck Elixir</p>
+          <p class="text-xl font-black" style="color: #b030e0;">{{ mockStats.avg_elixir_deck }}</p>
+        </div>
+
+        <div class="meta-stat-box rounded-xl p-4">
+          <p class="stat-label text-xs font-bold uppercase tracking-widest mb-1">Best Synergy</p>
+          <p class="text-sm font-black" style="color: #8090c0;">🤝 {{ mockStats.best_synergy }}</p>
+        </div>
+
+        <div class="meta-stat-box rounded-xl p-4">
+          <p class="stat-label text-xs font-bold uppercase tracking-widest mb-1">Best Counter</p>
+          <p class="text-sm font-black" style="color: #c06040;">🛡️ {{ mockStats.best_counter }}</p>
+        </div>
+
+        <div class="meta-stat-box rounded-xl p-4">
+          <p class="stat-label text-xs font-bold uppercase tracking-widest mb-1">Top Archetype</p>
+          <p class="text-sm font-black" style="color: #f6c237;">🏆 {{ mockStats.top_archetype }}</p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── DECKS CONTAINING THIS CARD ───────────────── -->
+    <div class="section-card rounded-2xl p-6">
+      <h2 class="section-title text-lg font-black tracking-wide mb-5 flex items-center gap-2">
+        🃏 <span class="cr-title-gradient">Decks Using This Card</span>
+        <span class="mock-badge text-xs font-bold px-2 py-0.5 rounded-full ml-auto">Mock Data</span>
+      </h2>
+
+      <div class="flex flex-col gap-3">
+        @for (deck of mockDecks; track deck.id) {
+        <a [routerLink]="['/decks', deck.id]"
+          class="deck-row rounded-xl p-4 flex items-center justify-between transition-all">
+          <div>
+            <p class="text-sm font-black" style="color: #b8cce8;">{{ deck.name }}</p>
+            <p class="text-xs font-bold mt-0.5" style="color: #4a6a9c;">{{ deck.archetype }} · {{ deck.card_count }}
+              cards</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <span class="text-xs font-bold" style="color: #b030e0;">⬡ {{ deck.avg_elixir }}</span>
+            <span class="deck-arrow text-xs" style="color: #4a6a9c;">→</span>
+          </div>
+        </a>
+        }
+      </div>
+    </div>
+
+    }
+  </div>
+</div>
