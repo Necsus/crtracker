@@ -8,11 +8,12 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import type {
+  BattleListResponse,
   CardApiItem,
   Deck,
   DeckListItem,
   DeckStats,
-  PlayerImportResponse,
+  PlayerImportResponse
 } from '../01_models/deck.model';
 import { buildUrl } from './api.interceptor';
 
@@ -106,5 +107,28 @@ export class DeckDal {
    */
   getCard(cardId: string): Observable<CardApiItem> {
     return this.http.get<CardApiItem>(`${this.basePath}/cards/${cardId}`);
+  }
+
+  /* ============================================
+     BATTLES
+     ============================================ */
+
+  /**
+   * List battles with optional type filter and pagination
+   */
+  listBattles(params: {
+    battle_type?: string;
+    offset?: number;
+    limit?: number;
+  } = {}): Observable<BattleListResponse> {
+    const url = buildUrl(`${this.basePath}/battles`, params);
+    return this.http.get<BattleListResponse>(url);
+  }
+
+  /**
+   * List all available battle types
+   */
+  listBattleTypes(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.basePath}/battles/types`);
   }
 }

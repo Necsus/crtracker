@@ -1,0 +1,178 @@
+<!-- Battles Log — Clash Royale Theme -->
+<div class="min-h-screen font-cr py-8 px-4">
+  <div class="max-w-6xl mx-auto">
+
+    <!-- ══ HERO HEADER ══ -->
+    <div class="text-center mb-8">
+      <h2 class="text-4xl font-black tracking-wide mb-2">
+        <span class="cr-title-gradient">⚔️ Battle Log</span>
+      </h2>
+      <p class="text-sm font-bold tracking-widest uppercase" style="color: #4a6a9c;">
+        {{ total() | number }} battles recorded
+      </p>
+    </div>
+
+    <!-- ══ TYPE FILTER ══ -->
+    <div class="flex flex-wrap justify-center gap-2 mb-8">
+      <button (click)="setType('all')" [class.filter-active]="typeFilter() === 'all'"
+        class="filter-pill flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all">
+        🎮 All
+      </button>
+      @for (t of availableTypes(); track t) {
+      <button (click)="setType(t)" [class.filter-active]="typeFilter() === t"
+        class="filter-pill flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all">
+        {{ typeMeta(t).emoji }} {{ typeMeta(t).label }}
+      </button>
+      }
+    </div>
+
+    <!-- ══ LOADING ══ -->
+    @if (loading()) {
+    <div class="flex justify-center py-24">
+      <app-loading-spinner />
+    </div>
+    }
+
+    <!-- ══ ERROR ══ -->
+    @if (error()) {
+    <div class="text-center py-20">
+      <p class="text-4xl mb-3">⚠️</p>
+      <p class="text-sm font-bold" style="color:#c06040">{{ error() }}</p>
+    </div>
+    }
+
+    <!-- ══ BATTLES LIST ══ -->
+    @if (!loading() && !error()) {
+    <div class="flex flex-col gap-3">
+      @for (battle of battles(); track battle.id) {
+
+      <div class="battle-card rounded-2xl p-4 flex flex-col gap-3">
+
+        <!-- Top row: type badge + time + arena -->
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div class="flex items-center gap-2">
+            <span class="type-badge text-xs font-bold px-2.5 py-1 rounded-full"
+              [style.color]="typeMeta(battle.battle_type).color"
+              [style.border-color]="typeMeta(battle.battle_type).color + '44'"
+              [style.background]="typeMeta(battle.battle_type).color + '18'">
+              {{ typeMeta(battle.battle_type).emoji }} {{ typeMeta(battle.battle_type).label }}
+            </span>
+            @if (battle.arena_name) {
+            <span class="text-xs font-bold" style="color:#3a5a8a">🏟️ {{ battle.arena_name }}</span>
+            }
+          </div>
+          <span class="text-xs font-bold" style="color:#3a5a8a">
+            {{ battle.battle_time | date:'dd MMM yyyy, HH:mm' }}
+          </span>
+        </div>
+
+        <!-- Teams -->
+        <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] gap-3 items-center">
+
+          <!-- Team 1 -->
+          <div class="team-block rounded-xl p-3" [class.team-winner]="isWinner(battle, battle.team1_tag)"
+            [class.team-loser]="battle.winner_tag && !isWinner(battle, battle.team1_tag)">
+            <div class="flex items-center justify-between mb-2">
+              <div>
+                <p class="text-sm font-black" style="color:#b8cce8">{{ battle.team1_name || battle.team1_tag }}</p>
+                <p class="text-xs font-bold" style="color:#3a5a8a">{{ battle.team1_tag }}</p>
+              </div>
+              <div class="flex flex-col items-end gap-0.5">
+                <div class="crowns-row flex items-center gap-1">
+                  @for (_ of [].constructor(battle.team1_crowns ?? 0); track $index) {
+                  <span class="text-sm">👑</span>
+                  }
+                </div>
+                @if (battle.team1_trophy_change != null) {
+                <span class="text-xs font-black" [ngClass]="trophyClass(battle.team1_trophy_change)">
+                  {{ trophySign(battle.team1_trophy_change) }} 🏆
+                </span>
+                }
+              </div>
+            </div>
+            <!-- Cards strip -->
+            <div class="cards-strip flex flex-wrap gap-1">
+              @for (card of battle.team1_cards; track card.id) {
+              <div class="card-mini" [title]="card.name + ' (lvl ' + card.level + ')'">
+                @if (card.icon_url) {
+                <img [src]="card.icon_url" [alt]="card.name" loading="lazy" />
+                } @else {
+                <div class="card-mini-fallback">{{ card.name[0] }}</div>
+                }
+                @if (card.level) {
+                <span class="card-level">{{ card.level }}</span>
+                }
+              </div>
+              }
+            </div>
+          </div>
+
+          <!-- VS divider -->
+          <div class="vs-divider text-center">
+            <span class="text-lg font-black" style="color:#2a3a5a">VS</span>
+          </div>
+
+          <!-- Team 2 -->
+          <div class="team-block rounded-xl p-3" [class.team-winner]="isWinner(battle, battle.team2_tag)"
+            [class.team-loser]="battle.winner_tag && !isWinner(battle, battle.team2_tag)">
+            <div class="flex items-center justify-between mb-2">
+              <div>
+                <p class="text-sm font-black" style="color:#b8cce8">{{ battle.team2_name || battle.team2_tag }}</p>
+                <p class="text-xs font-bold" style="color:#3a5a8a">{{ battle.team2_tag }}</p>
+              </div>
+              <div class="flex flex-col items-end gap-0.5">
+                <div class="crowns-row flex items-center gap-1">
+                  @for (_ of [].constructor(battle.team2_crowns ?? 0); track $index) {
+                  <span class="text-sm">👑</span>
+                  }
+                </div>
+                @if (battle.team2_trophy_change != null) {
+                <span class="text-xs font-black" [ngClass]="trophyClass(battle.team2_trophy_change)">
+                  {{ trophySign(battle.team2_trophy_change) }} 🏆
+                </span>
+                }
+              </div>
+            </div>
+            <!-- Cards strip -->
+            <div class="cards-strip flex flex-wrap gap-1">
+              @for (card of battle.team2_cards; track card.id) {
+              <div class="card-mini" [title]="card.name + ' (lvl ' + card.level + ')'">
+                @if (card.icon_url) {
+                <img [src]="card.icon_url" [alt]="card.name" loading="lazy" />
+                } @else {
+                <div class="card-mini-fallback">{{ card.name[0] }}</div>
+                }
+                @if (card.level) {
+                <span class="card-level">{{ card.level }}</span>
+                }
+              </div>
+              }
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      }
+    </div>
+
+    <!-- ══ PAGINATION ══ -->
+    @if (total() > limit) {
+    <div class="flex items-center justify-center gap-4 mt-8">
+      <button (click)="prevPage()" [disabled]="!hasPrev()"
+        class="page-btn px-4 py-2 rounded-xl text-sm font-bold transition-all" [class.page-btn-disabled]="!hasPrev()">
+        ← Prev
+      </button>
+      <span class="text-sm font-bold" style="color:#4a6a9c">
+        Page {{ currentPage() }} / {{ totalPages() }}
+      </span>
+      <button (click)="nextPage()" [disabled]="!hasNext()"
+        class="page-btn px-4 py-2 rounded-xl text-sm font-bold transition-all" [class.page-btn-disabled]="!hasNext()">
+        Next →
+      </button>
+    </div>
+    }
+    }
+
+  </div>
+</div>

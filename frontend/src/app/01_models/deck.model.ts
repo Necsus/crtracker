@@ -58,6 +58,48 @@ export interface DeckStats {
   meta_share: number;
 }
 
+/* ============================================
+   BATTLE LOG MODELS
+   ============================================ */
+
+export interface BattleCard {
+  id: number;
+  name: string;
+  elixir_cost: number | null;
+  rarity: string | null;
+  level: number | null;
+  icon_url: string | null;
+}
+
+export interface Battle {
+  id: number;
+  battle_key: string;
+  battle_time: string;
+  battle_type: string | null;
+  game_mode_name: string | null;
+  arena_name: string | null;
+  team1_tag: string;
+  team1_name: string | null;
+  team1_crowns: number | null;
+  team1_starting_trophies: number | null;
+  team1_trophy_change: number | null;
+  team1_cards: BattleCard[];
+  team2_tag: string;
+  team2_name: string | null;
+  team2_crowns: number | null;
+  team2_starting_trophies: number | null;
+  team2_trophy_change: number | null;
+  team2_cards: BattleCard[];
+  winner_tag: string | null;
+}
+
+export interface BattleListResponse {
+  items: Battle[];
+  total: number;
+  offset: number;
+  limit: number;
+}
+
 /**
  * Card returned by the /api/v1/cards endpoint.
  * `type` can be null for cards whose type was not stored at sync time.

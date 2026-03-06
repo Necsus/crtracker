@@ -12,6 +12,11 @@ export const appRoutes: Routes = [
       import('./deck-search/deck-search.routes').then((m) => m.DECK_SEARCH_ROUTES),
   },
   {
+    path: 'battles',
+    loadChildren: () =>
+      import('./battles-log/battles-log.routes').then((m) => m.BATTLES_LOG_ROUTES),
+  },
+  {
     path: 'cards/:id',
     loadChildren: () =>
       import('./card-detail/card-detail.routes').then((m) => m.CARD_DETAIL_ROUTES),

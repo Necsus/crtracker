@@ -148,6 +148,60 @@ class DeckStatsResponse(BaseModel):
 
 
 # =============================================================================
+# BATTLE SCHEMAS
+# =============================================================================
+
+
+class BattleCardItem(BaseModel):
+    """A single card as stored in a battle log."""
+
+    id: int = Field(..., description="CR numeric card ID")
+    name: str
+    elixir_cost: int | None = None
+    rarity: str | None = None
+    level: int | None = None
+    icon_url: str | None = None
+
+
+class BattleResponse(BaseModel):
+    """A single battle from the battles table."""
+
+    id: int
+    battle_key: str
+    battle_time: datetime
+    battle_type: str | None = None
+    game_mode_name: str | None = None
+    arena_name: str | None = None
+
+    team1_tag: str
+    team1_name: str | None = None
+    team1_crowns: int | None = None
+    team1_starting_trophies: int | None = None
+    team1_trophy_change: int | None = None
+    team1_cards: list[BattleCardItem] = Field(default_factory=list)
+
+    team2_tag: str
+    team2_name: str | None = None
+    team2_crowns: int | None = None
+    team2_starting_trophies: int | None = None
+    team2_trophy_change: int | None = None
+    team2_cards: list[BattleCardItem] = Field(default_factory=list)
+
+    winner_tag: str | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class BattleListResponse(BaseModel):
+    """Paginated list of battles."""
+
+    items: list[BattleResponse]
+    total: int
+    offset: int
+    limit: int
+
+
+# =============================================================================
 # ORACLE SCHEMAS
 # =============================================================================
 
