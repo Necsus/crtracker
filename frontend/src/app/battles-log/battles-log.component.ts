@@ -29,7 +29,6 @@ const TYPE_META: Record<string, { label: string; emoji: string; color: string }>
   standalone: true,
   imports: [NgClass, DatePipe, LoadingSpinnerComponent, DecimalPipe, RouterLink],
   templateUrl: './battles-log.component.html',
-  styleUrl: './battles-log.component.scss',
 })
 export class BattlesLogComponent implements OnInit {
   private readonly dal = inject(DeckDal);
@@ -102,7 +101,7 @@ export class BattlesLogComponent implements OnInit {
 
   trophyClass(change: number | null): string {
     if (change == null) return '';
-    return change > 0 ? 'trophy-plus' : change < 0 ? 'trophy-minus' : 'trophy-zero';
+    return change > 0 ? 'text-[#40d070]' : change < 0 ? 'text-[#d04040]' : 'text-[#6080a8]';
   }
 
   trophySign(change: number | null): string {

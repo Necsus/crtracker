@@ -3,7 +3,8 @@
   <div class="max-w-4xl mx-auto">
 
     <!-- ══ BACK LINK ══ -->
-    <a routerLink="/cards" class="back-link inline-flex items-center gap-2 mb-8 text-sm font-bold transition-all">
+    <a routerLink="/cards"
+      class="text-[#4a6a9c] hover:text-[#f6c237] transition-colors inline-flex items-center gap-2 mb-8 text-sm font-bold">
       ← Back to Card Catalogue
     </a>
 
@@ -19,7 +20,8 @@
     <div class="text-center py-32">
       <p class="text-5xl mb-4">⚠️</p>
       <p class="text-lg font-bold" style="color: #c06040;">{{ error() }}</p>
-      <a routerLink="/cards" class="back-link inline-block mt-6 text-sm font-bold px-5 py-2 rounded-xl transition-all">
+      <a routerLink="/cards"
+        class="text-[#4a6a9c] hover:text-[#f6c237] transition-colors inline-block mt-6 text-sm font-bold px-5 py-2 rounded-xl">
         ← Return to Catalogue
       </a>
     </div>
@@ -30,7 +32,8 @@
     @let c = card()!;
 
     <!-- ── HERO BANNER ───────────────────────────────── -->
-    <div class="hero-banner rounded-2xl p-6 mb-6 flex flex-col sm:flex-row items-center sm:items-start gap-6">
+    <div
+      class="rounded-2xl p-6 mb-6 flex flex-col sm:flex-row items-center sm:items-start gap-6 bg-gradient-to-br from-[#0c1e3a] to-[#091628] border border-[#1c3a6a] shadow-[0_4px_24px_rgba(0,0,0,0.4)]">
 
       <!-- Card Icon (large) -->
       <div class="shrink-0">
@@ -43,91 +46,97 @@
 
         <!-- Badges row -->
         <div class="flex flex-wrap justify-center sm:justify-start gap-2 mb-4">
-          <span class="badge-pill" [ngClass]="rarityClass(c.rarity)">
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border"
+            [ngClass]="rarityClass(c.rarity)" [style.border-color]="'currentColor'"
+            [style.background]="'rgba(0,0,0,0.2)'">
             {{ rarityEmoji(c.rarity) }} {{ c.rarity | titlecase }}
           </span>
           @if (c.type) {
-          <span class="badge-pill badge-type">
+          <span
+            class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[#1c3a6a]/50 border border-[#1c3a6a] text-[#7ba8d0]">
             {{ typeEmoji(c.type) }} {{ c.type | titlecase }}
           </span>
           }
-          <span class="badge-pill badge-elixir">
-            <span class="elixir-dot">⬡</span> {{ c.elixir }} Elixir
+          <span
+            class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-[#8030e0]/15 border border-[#8030e0]/30 text-[#c070f0]">
+            ⬡ {{ c.elixir }} Elixir
           </span>
         </div>
 
         <!-- Description -->
         @if (c.description) {
-        <p class="card-description text-sm leading-relaxed">{{ c.description }}</p>
+        <p class="text-sm leading-relaxed text-[#8090a8]">{{ c.description }}</p>
         }
       </div>
     </div>
 
     <!-- ── QUICK STATS STRIP ─────────────────────────── -->
-    <div class="stats-strip grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
 
-      <div class="stat-box rounded-xl p-4 text-center">
-        <p class="stat-label text-xs font-bold uppercase tracking-widest mb-1">Elixir Cost</p>
-        <p class="stat-value text-2xl font-black" style="color: #b030e0;">{{ c.elixir }}</p>
+      <div class="rounded-xl p-4 text-center bg-[#0c1e3a] border border-[#1c3a6a]">
+        <p class="text-xs font-bold uppercase tracking-widest mb-1 text-[#4a6a9c]">Elixir Cost</p>
+        <p class="text-2xl font-black" style="color: #b030e0;">{{ c.elixir }}</p>
       </div>
 
-      <div class="stat-box rounded-xl p-4 text-center">
-        <p class="stat-label text-xs font-bold uppercase tracking-widest mb-1">Rarity</p>
-        <p class="stat-value text-sm font-black" [ngClass]="rarityClass(c.rarity)">
+      <div class="rounded-xl p-4 text-center bg-[#0c1e3a] border border-[#1c3a6a]">
+        <p class="text-xs font-bold uppercase tracking-widest mb-1 text-[#4a6a9c]">Rarity</p>
+        <p class="text-sm font-black" [ngClass]="rarityClass(c.rarity)">
           {{ rarityEmoji(c.rarity) }} {{ c.rarity | titlecase }}
         </p>
       </div>
 
-      <div class="stat-box rounded-xl p-4 text-center">
-        <p class="stat-label text-xs font-bold uppercase tracking-widest mb-1">Type</p>
-        <p class="stat-value text-sm font-black" style="color: #f6c237;">
+      <div class="rounded-xl p-4 text-center bg-[#0c1e3a] border border-[#1c3a6a]">
+        <p class="text-xs font-bold uppercase tracking-widest mb-1 text-[#4a6a9c]">Type</p>
+        <p class="text-sm font-black" style="color: #f6c237;">
           {{ typeEmoji(c.type) }} {{ (c.type | titlecase) || '—' }}
         </p>
       </div>
 
-      <div class="stat-box rounded-xl p-4 text-center">
-        <p class="stat-label text-xs font-bold uppercase tracking-widest mb-1">Win Rate</p>
+      <div class="rounded-xl p-4 text-center bg-[#0c1e3a] border border-[#1c3a6a]">
+        <p class="text-xs font-bold uppercase tracking-widest mb-1 text-[#4a6a9c]">Win Rate</p>
         <app-winrate-badge [winrate]="mockStats.win_rate_with" size="md" />
       </div>
 
     </div>
 
     <!-- ── META STATISTICS (mocked) ─────────────────── -->
-    <div class="section-card rounded-2xl p-6 mb-6">
-      <h2 class="section-title text-lg font-black tracking-wide mb-5 flex items-center gap-2">
+    <div class="rounded-2xl p-6 mb-6 bg-gradient-to-br from-[#0c1e3a] to-[#091628] border border-[#1c3a6a]">
+      <h2 class="text-lg font-black tracking-wide mb-5 flex items-center gap-2">
         📊 <span class="cr-title-gradient">Meta Statistics</span>
-        <span class="mock-badge text-xs font-bold px-2 py-0.5 rounded-full ml-auto">Mock Data</span>
+        <span
+          class="text-xs font-bold px-2 py-0.5 rounded-full ml-auto bg-[#3a2a14]/50 border border-[#f6c237]/20 text-[#f6c237]/60">Mock
+          Data</span>
       </h2>
 
       <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
 
-        <div class="meta-stat-box rounded-xl p-4">
-          <p class="stat-label text-xs font-bold uppercase tracking-widest mb-1">Usage Rate</p>
+        <div class="rounded-xl p-4 bg-[#0a1828]/60 border border-[#1a3060]">
+          <p class="text-xs font-bold uppercase tracking-widest mb-1 text-[#4a6a9c]">Usage Rate</p>
           <p class="text-xl font-black" style="color: #f6c237;">{{ mockStats.usage_rate }}%</p>
         </div>
 
-        <div class="meta-stat-box rounded-xl p-4">
-          <p class="stat-label text-xs font-bold uppercase tracking-widest mb-1">Win Rate With</p>
+        <div class="rounded-xl p-4 bg-[#0a1828]/60 border border-[#1a3060]">
+          <p class="text-xs font-bold uppercase tracking-widest mb-1 text-[#4a6a9c]">Win Rate With</p>
           <p class="text-xl font-black" style="color: #40d080;">{{ mockStats.win_rate_with }}%</p>
         </div>
 
-        <div class="meta-stat-box rounded-xl p-4">
-          <p class="stat-label text-xs font-bold uppercase tracking-widest mb-1">Avg Deck Elixir</p>
+        <div class="rounded-xl p-4 bg-[#0a1828]/60 border border-[#1a3060]">
+          <p class="text-xs font-bold uppercase tracking-widest mb-1 text-[#4a6a9c]">Avg Deck Elixir</p>
           <p class="text-xl font-black" style="color: #b030e0;">{{ mockStats.avg_elixir_deck }}</p>
         </div>
 
-        <div class="meta-stat-box rounded-xl p-4">
-          <p class="stat-label text-xs font-bold uppercase tracking-widest mb-1">Best Synergy</p>
+        <div class="rounded-xl p-4 bg-[#0a1828]/60 border border-[#1a3060]">
+          <p class="text-xs font-bold uppercase tracking-widest mb-1 text-[#4a6a9c]">Best Synergy</p>
           <p class="text-sm font-black" style="color: #8090c0;">🤝 {{ mockStats.best_synergy }}</p>
         </div>
 
-        <div class="meta-stat-box rounded-xl p-4">
-          <p class="stat-label text-xs font-bold uppercase tracking-widest mb-1">Best Counter</p>
+        <div class="rounded-xl p-4 bg-[#0a1828]/60 border border-[#1a3060]">
+          <p class="text-xs font-bold uppercase tracking-widest mb-1 text-[#4a6a9c]">Best Counter</p>
           <p class="text-sm font-black" style="color: #c06040;">🛡️ {{ mockStats.best_counter }}</p>
         </div>
 
-        <div class="meta-stat-box rounded-xl p-4">
-          <p class="stat-label text-xs font-bold uppercase tracking-widest mb-1">Top Archetype</p>
+        <div class="rounded-xl p-4 bg-[#0a1828]/60 border border-[#1a3060]">
+          <p class="text-xs font-bold uppercase tracking-widest mb-1 text-[#4a6a9c]">Top Archetype</p>
           <p class="text-sm font-black" style="color: #f6c237;">🏆 {{ mockStats.top_archetype }}</p>
         </div>
 
@@ -135,16 +144,18 @@
     </div>
 
     <!-- ── DECKS CONTAINING THIS CARD ───────────────── -->
-    <div class="section-card rounded-2xl p-6">
-      <h2 class="section-title text-lg font-black tracking-wide mb-5 flex items-center gap-2">
-        🃏 <span class="cr-title-gradient">Decks Using This Card</span>
-        <span class="mock-badge text-xs font-bold px-2 py-0.5 rounded-full ml-auto">Mock Data</span>
+    <div class="rounded-2xl p-6 bg-gradient-to-br from-[#0c1e3a] to-[#091628] border border-[#1c3a6a]">
+      <h2 class="text-lg font-black tracking-wide mb-5 flex items-center gap-2">
+        🃾 <span class="cr-title-gradient">Decks Using This Card</span>
+        <span
+          class="text-xs font-bold px-2 py-0.5 rounded-full ml-auto bg-[#3a2a14]/50 border border-[#f6c237]/20 text-[#f6c237]/60">Mock
+          Data</span>
       </h2>
 
       <div class="flex flex-col gap-3">
         @for (deck of mockDecks; track deck.id) {
         <a [routerLink]="['/decks', deck.id]"
-          class="deck-row rounded-xl p-4 flex items-center justify-between transition-all">
+          class="rounded-xl p-4 flex items-center justify-between bg-[#0a1828]/50 border border-[#1a3060] hover:border-[#2c4a8a] transition-colors no-underline">
           <div>
             <p class="text-sm font-black" style="color: #b8cce8;">{{ deck.name }}</p>
             <p class="text-xs font-bold mt-0.5" style="color: #4a6a9c;">{{ deck.archetype }} · {{ deck.card_count }}

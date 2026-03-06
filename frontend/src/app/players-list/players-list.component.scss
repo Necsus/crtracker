@@ -3,21 +3,50 @@
    Clash Royale themed leaderboard page
    ============================================================ */
 
-/* ── Season filter pills ───────────────────────────────────── */
-.filter-pill {
-  background: rgba(12, 30, 58, 0.7);
+/* ── Season select ────────────────────────────────────────── */
+.season-select-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.season-select-icon {
+  position: absolute;
+  left: 0.75rem;
+  pointer-events: none;
+  font-size: 0.9rem;
+  z-index: 1;
+}
+
+.season-select {
+  appearance: none;
+  background: rgba(12, 30, 58, 0.9);
   border: 1px solid #1c3a6a;
-  color: #4a6a9c;
+  border-radius: 0.75rem;
+  color: #b8cce8;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  min-width: 200px;
+  padding: 0.5rem 2.25rem 0.5rem 2.25rem;
+  transition: border-color 0.15s ease, color 0.15s ease;
 
-  &:hover {
-    border-color: #f6c23755;
-    color: #b8cce8;
-  }
+  /* dropdown arrow */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%234a6a9c' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
 
-  &.filter-active {
-    background: rgba(246, 194, 55, 0.12);
+  &:hover,
+  &:focus {
     border-color: #f6c23788;
     color: #f6c237;
+    outline: none;
+  }
+
+  option {
+    background: #0c1e3a;
+    color: #b8cce8;
   }
 }
 

@@ -27,7 +27,6 @@ type TypeFilter = 'all' | 'troop' | 'spell' | 'building';
   standalone: true,
   imports: [FormsModule, NgClass, RouterLink, CardIconComponent, LoadingSpinnerComponent],
   templateUrl: './cards-browser.component.html',
-  styleUrl: './cards-browser.component.scss',
 })
 export class CardsBrowserComponent implements OnInit {
   private readonly dal = inject(DeckDal);

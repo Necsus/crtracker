@@ -3,15 +3,16 @@
    Search interface and deck statistics dashboard
    ============================================ */
 
-import { Component, inject, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { NgClass } from '@angular/common';
+import { Component, ElementRef, inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 
 import { DeckService } from '../10_bll/deck.service';
 import { DeckDisplayComponent } from '../shared/components/deck-display/deck-display.component';
-import { MatchupCardComponent } from '../shared/components/matchup-card/matchup-card.component';
 import { LoadingSpinnerComponent } from '../shared/components/loading-spinner/loading-spinner.component';
+import { MatchupCardComponent } from '../shared/components/matchup-card/matchup-card.component';
 import { WinrateBadgeComponent } from '../shared/components/winrate-badge/winrate-badge.component';
 
 /** Regex for valid Clash Royale player tag */
@@ -30,13 +31,13 @@ const PLAYER_TAG_REGEX = /^#?[0289PYLQGRJCUV]{3,12}$/i;
   selector: 'app-deck-search',
   standalone: true,
   imports: [
+    NgClass,
     DeckDisplayComponent,
     MatchupCardComponent,
     LoadingSpinnerComponent,
     WinrateBadgeComponent,
   ],
   templateUrl: './deck-search.component.html',
-  styleUrl: './deck-search.component.scss',
 })
 export class DeckSearchComponent implements OnInit, OnDestroy {
   private readonly deckService = inject(DeckService);

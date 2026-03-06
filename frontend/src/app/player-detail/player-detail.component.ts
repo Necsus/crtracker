@@ -16,7 +16,6 @@ import { LoadingSpinnerComponent } from '../shared/components/loading-spinner/lo
   standalone: true,
   imports: [RouterLink, LoadingSpinnerComponent, DecimalPipe],
   templateUrl: './player-detail.component.html',
-  styleUrl: './player-detail.component.scss',
 })
 export class PlayerDetailComponent implements OnInit {
   private readonly dal = inject(DeckDal);

@@ -3,7 +3,7 @@
    Path of Legend leaderboard page
    ============================================ */
 
-import { DecimalPipe } from '@angular/common';
+import { DecimalPipe, NgClass } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
@@ -14,9 +14,8 @@ import { LoadingSpinnerComponent } from '../shared/components/loading-spinner/lo
 @Component({
   selector: 'app-players-list',
   standalone: true,
-  imports: [RouterLink, LoadingSpinnerComponent, DecimalPipe],
+  imports: [NgClass, RouterLink, LoadingSpinnerComponent, DecimalPipe],
   templateUrl: './players-list.component.html',
-  styleUrl: './players-list.component.scss',
 })
 export class PlayersListComponent implements OnInit {
   private readonly dal = inject(DeckDal);

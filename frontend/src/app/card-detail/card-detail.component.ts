@@ -48,7 +48,6 @@ const MOCK_DECKS: DeckListItem[] = [
   standalone: true,
   imports: [NgClass, RouterLink, CardIconComponent, LoadingSpinnerComponent, WinrateBadgeComponent, TitleCasePipe],
   templateUrl: './card-detail.component.html',
-  styleUrl: './card-detail.component.scss',
 })
 export class CardDetailComponent implements OnInit {
   private readonly dal = inject(DeckDal);
@@ -84,12 +83,12 @@ export class CardDetailComponent implements OnInit {
 
   rarityClass(rarity?: string): string {
     switch (rarity) {
-      case 'common': return 'rarity-common';
-      case 'rare': return 'rarity-rare';
-      case 'epic': return 'rarity-epic';
-      case 'legendary': return 'rarity-legendary';
-      case 'champion': return 'rarity-champion';
-      default: return 'rarity-common';
+      case 'common': return 'text-[#b0b8c0]';
+      case 'rare': return 'text-[#e07830]';
+      case 'epic': return 'text-[#9040d8]';
+      case 'legendary': return 'text-[#f6c237]';
+      case 'champion': return 'text-[#ff4040]';
+      default: return 'text-[#b0b8c0]';
     }
   }
 

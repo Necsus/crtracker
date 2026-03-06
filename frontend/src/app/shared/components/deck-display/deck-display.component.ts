@@ -20,7 +20,6 @@ import { CardIconComponent } from '../card-icon/card-icon.component';
   standalone: true,
   imports: [CardIconComponent],
   templateUrl: './deck-display.component.html',
-  styleUrl: './deck-display.component.scss',
 })
 export class DeckDisplayComponent {
   /** Deck data input */

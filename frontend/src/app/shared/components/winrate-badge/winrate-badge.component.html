@@ -1,7 +1,7 @@
-<!-- Winrate Badge — CR Style -->
-<div class="winrate-badge" [class]="'winrate-badge--' + size() + ' winrate-badge--' + colorClass()">
+<!-- Winrate Badge -->
+<div class="inline-flex items-center gap-1 rounded-full font-extrabold" [ngClass]="badgeClasses()">
   @if (showIcon()) {
-  <span class="winrate-badge__icon">{{ icon() }}</span>
+  <span class="text-[0.8em]">{{ icon() }}</span>
   }
-  <span class="winrate-badge__value">{{ displayLabel() }}</span>
+  <span style="line-height:1">{{ displayLabel() }}</span>
 </div>

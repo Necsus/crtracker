@@ -13,18 +13,17 @@
     </div>
 
     <!-- ══ SEASON FILTER ══ -->
-    @if (availableSeasons().length > 1) {
-    <div class="flex flex-wrap justify-center gap-2 mb-6">
-      <button (click)="setSeason(null)" [class.filter-active]="seasonFilter() === null"
-        class="filter-pill px-3 py-1.5 rounded-xl text-xs font-bold transition-all">
-        📅 All seasons
-      </button>
-      @for (s of availableSeasons(); track s) {
-      <button (click)="setSeason(s)" [class.filter-active]="seasonFilter() === s"
-        class="filter-pill px-3 py-1.5 rounded-xl text-xs font-bold transition-all">
-        {{ s }}
-      </button>
-      }
+    @if (availableSeasons().length > 0) {
+    <div class="flex justify-center mb-6">
+      <div class="season-select-wrapper">
+        <span class="season-select-icon">📅</span>
+        <select class="season-select" (change)="setSeason($any($event.target).value || null)">
+          <option value="">All seasons</option>
+          @for (s of availableSeasons(); track s) {
+          <option [value]="s" [selected]="seasonFilter() === s">{{ s }}</option>
+          }
+        </select>
+      </div>
     </div>
     }
 
@@ -61,28 +60,29 @@
       @for (player of players(); track player.tag) {
 
       <a [routerLink]="['/players', player.tag]"
-        class="player-row rounded-2xl px-4 py-3 grid grid-cols-[48px_1fr] sm:grid-cols-[56px_1fr_140px_120px_90px] gap-3 items-center no-underline">
+        class="rounded-2xl px-4 py-3 grid grid-cols-[48px_1fr] sm:grid-cols-[56px_1fr_140px_120px_90px] gap-3 items-center no-underline bg-gradient-to-br from-[#0c1e3a] to-[#091628] border border-[#1c3a6a] hover:border-[#2c4a8a] transition-colors">
 
         <!-- Rank -->
-        <span class="rank-number text-right" [class.rank-top3]="(player.league_rank ?? 99) <= 3">
+        <span class="text-right text-sm font-black"
+          [ngClass]="(player.league_rank ?? 99) <= 3 ? 'text-[#f6c237] text-base' : 'text-[#4a6a9c]'">
           {{ rankEmoji(player.league_rank) }}
         </span>
 
         <!-- Name / tag -->
         <div>
-          <p class="player-name-link text-sm">{{ player.name ?? player.tag }}</p>
-          <p class="player-tag">#{{ player.tag }}</p>
+          <p class="text-sm font-black text-[#b8cce8]">{{ player.name ?? player.tag }}</p>
+          <p class="text-xs text-[#3a5a8a] mt-0.5">#{{ player.tag }}</p>
         </div>
 
         <!-- Trophies -->
         <div class="hidden sm:block text-right">
-          <span class="trophy-value text-base">{{ player.trophies ?? '—' }}</span>
+          <span class="font-black text-base text-[#f6c237]">{{ player.trophies ?? '—' }}</span>
           <span class="ml-1 text-sm">🏆</span>
         </div>
 
         <!-- Best trophies -->
         <div class="hidden sm:block text-right">
-          <span class="best-trophy-value">{{ player.best_trophies ?? '—' }} 🏆</span>
+          <span class="text-sm font-bold text-[#7ba8d0]">{{ player.best_trophies ?? '—' }} 🏆</span>
         </div>
 
         <!-- Season -->
@@ -103,14 +103,14 @@
     @if (total() > limit) {
     <div class="flex items-center justify-center gap-4 mt-8">
       <button (click)="prevPage()" [disabled]="!hasPrev()"
-        class="page-btn px-4 py-2 rounded-xl text-sm font-bold transition-all" [class.page-btn-disabled]="!hasPrev()">
+        class="px-4 py-2 rounded-xl text-sm font-bold transition-all bg-[#0c1e3a] border border-[#1c3a6a] text-[#7ba8d0] hover:border-[#f6c237]/33 hover:text-[#f6c237] disabled:opacity-35 disabled:cursor-not-allowed">
         ← Prev
       </button>
-      <span class="text-sm font-bold" style="color:#4a6a9c">
+      <span class="text-sm font-bold text-[#4a6a9c]">
         Page {{ currentPage() }} / {{ totalPages() }}
       </span>
       <button (click)="nextPage()" [disabled]="!hasNext()"
-        class="page-btn px-4 py-2 rounded-xl text-sm font-bold transition-all" [class.page-btn-disabled]="!hasNext()">
+        class="px-4 py-2 rounded-xl text-sm font-bold transition-all bg-[#0c1e3a] border border-[#1c3a6a] text-[#7ba8d0] hover:border-[#f6c237]/33 hover:text-[#f6c237] disabled:opacity-35 disabled:cursor-not-allowed">
         Next →
       </button>
     </div>

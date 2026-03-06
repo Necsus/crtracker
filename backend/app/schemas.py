@@ -260,6 +260,61 @@ class PlayerListResponse(BaseModel):
 
 
 # =============================================================================
+# SEASON SCHEMAS
+# =============================================================================
+
+
+class SeasonResponse(BaseModel):
+    """A Clash Royale season with its exact time boundaries."""
+
+    id: int
+    name: str = Field(..., description="Label e.g. '2026-03'")
+    start_at: datetime = Field(..., description="Exact season start (tz-aware)")
+    end_at: datetime | None = Field(None, description="Exact season end, NULL if active")
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class SeasonCreate(BaseModel):
+    """Payload to create a new season."""
+
+    name: str = Field(..., min_length=4, max_length=10, description="Label e.g. '2026-03'")
+    start_at: datetime = Field(..., description="Exact season start (tz-aware)")
+    end_at: datetime | None = Field(None, description="Exact season end, NULL if active")
+
+
+class PlayerSeasonRankResponse(BaseModel):
+    """Rank of a player for a specific season."""
+
+    id: int
+    player_id: int
+    season_id: int
+    league_rank: int | None = None
+    league_number: int | None = None
+    trophies: int | None = None
+    synced_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class PlayerSeasonRankWithSeason(PlayerSeasonRankResponse):
+    """Rank entry enriched with its season metadata."""
+
+    season: SeasonResponse
+
+
+class SeasonLeaderboard(BaseModel):
+    """Paginated leaderboard for a specific season."""
+
+    season: SeasonResponse
+    items: list[PlayerSeasonRankResponse]
+    total: int
+    offset: int
+    limit: int
+
+
+# =============================================================================
 # ORACLE SCHEMAS
 # =============================================================================
 

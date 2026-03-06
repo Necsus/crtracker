@@ -6,13 +6,16 @@ current deck.
 """
 
 from datetime import datetime
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import DateTime, Integer, String
 from sqlalchemy.dialects.postgresql import JSON
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
+
+if TYPE_CHECKING:
+    from app.b_models.player_season_rank import PlayerSeasonRank
 
 
 class Player(Base):
@@ -66,4 +69,13 @@ class Player(Base):
     synced_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
+    )
+
+    # -------------------------------------------------------------------------
+    # Relationships
+    # -------------------------------------------------------------------------
+    season_ranks: Mapped[list["PlayerSeasonRank"]] = relationship(
+        "PlayerSeasonRank",
+        back_populates="player",
+        cascade="all, delete-orphan",
     )
