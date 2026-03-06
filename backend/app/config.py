@@ -40,6 +40,12 @@ class Settings(BaseSettings):
         description="Access token expiration in minutes",
     )
 
+    # Clash Royale API
+    cr_api_token: str = Field(
+        default="",
+        description="Clash Royale API bearer token (https://developer.clashroyale.com)",
+    )
+
     # LLM Providers (Oracle Service)
     openai_api_key: str = Field(default="", description="OpenAI API key")
     groq_api_key: str = Field(default="", description="Groq API key")

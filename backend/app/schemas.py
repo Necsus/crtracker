@@ -20,7 +20,7 @@ class Card(BaseModel):
 
     id: str = Field(..., description="Unique card identifier (e.g., 'golem')")
     name: str = Field(..., description="Card display name")
-    elixir: int = Field(..., ge=0, le=8, description="Elixir cost")
+    elixir: int = Field(..., ge=0, description="Elixir cost")
     rarity: Literal["common", "rare", "epic", "legendary", "champion"] = Field(
         ..., description="Card rarity"
     )
@@ -28,6 +28,33 @@ class Card(BaseModel):
         ..., description="Card type"
     )
     icon_url: str | None = Field(None, description="URL to card icon image")
+
+
+# =============================================================================
+# CARD API RESPONSE SCHEMA
+# =============================================================================
+
+
+class CardResponse(BaseModel):
+    """Public response schema for a single Clash Royale card.
+
+    Maps Card DB model fields to the canonical API contract
+    (lowercase rarity/type, renamed elixir/icon fields).
+    """
+
+    id: str = Field(..., description="CR API card ID as string")
+    name: str = Field(..., description="Card display name")
+    elixir: int = Field(..., ge=0, description="Elixir cost")
+    rarity: Literal["common", "rare", "epic", "legendary", "champion"] = Field(
+        ..., description="Card rarity"
+    )
+    type: Literal["troop", "spell", "building"] | None = Field(
+        None, description="Card type"
+    )
+    icon_url: str | None = Field(None, description="URL to card icon image")
+    description: str | None = Field(None, description="In-game card description")
+
+    model_config = {"from_attributes": True}
 
 
 # =============================================================================

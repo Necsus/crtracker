@@ -1,23 +1,20 @@
-<!-- Deck Display Component -->
+<!-- Deck Display — Clash Royale Style -->
 <div class="deck-display">
 
-  <!-- Deck Header -->
   @if (showMeta()) {
   <div class="deck-display__header">
-    <div class="deck-display__title">
-      <h3 class="deck-display__name">{{ deck().name }}</h3>
-      <span class="deck-display__archetype">{{ deck().archetype }}</span>
+    <div class="min-w-0">
+      <h3 class="font-black text-base text-white leading-tight truncate">{{ deck().name }}</h3>
+      <span class="text-xs font-bold tracking-widest uppercase" style="color: var(--cr-gold); opacity: 0.8;">{{
+        deck().archetype }}</span>
     </div>
-    <div class="deck-display__stats">
-      <span class="deck-display__elixir">
-        <span class="elixir-icon">💧</span>
-        {{ deck().avg_elixir.toFixed(1) }} avg
-      </span>
+    <div class="deck-display__elixir shrink-0">
+      <span class="text-sm">💧</span>
+      <span>{{ deck().avg_elixir.toFixed(1) }}</span>
     </div>
   </div>
   }
 
-  <!-- Cards Grid -->
   <div class="deck-display__cards" [class.deck-display__cards--clickable]="clickable()">
     @for (card of deck().cards; track card.id) {
     <app-card-icon [card]="card" [size]="cardSize()" />

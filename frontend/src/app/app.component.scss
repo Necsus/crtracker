@@ -1,106 +1,15 @@
 /* ============================================
-   ROOT APP COMPONENT STYLES
+   ROOT APP — CLASH ROYALE THEME
    ============================================ */
 
-.app-root {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Header */
-.app-header {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: rgba(15, 23, 42, 0.95);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--color-bg-tertiary);
-}
-
-.app-header__content {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: var(--spacing-md) var(--spacing-xl);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.app-brand {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-  text-decoration: none;
-}
-
-.app-brand__icon {
-  font-size: 2rem;
-}
-
-.app-brand__title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin: 0;
-  background: linear-gradient(135deg, var(--color-gold-light), var(--color-primary-light));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* Navigation */
-.app-nav {
-  display: flex;
-  gap: var(--spacing-sm);
-}
-
-.nav-link {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-sm) var(--spacing-md);
-  color: var(--color-text-secondary);
-  text-decoration: none;
-  border-radius: var(--radius-md);
-  transition: all var(--transition-fast);
-
-  &:hover {
-    background: var(--color-bg-tertiary);
-    color: var(--color-text-primary);
-  }
-
-  &--active {
-    background: var(--color-primary);
-    color: white;
-  }
-}
-
-.nav-link__icon {
-  font-size: 1.125rem;
-}
-
-/* Main Content */
-.app-main {
-  flex: 1;
-  background: var(--color-bg-primary);
-}
-
-/* Footer */
-.app-footer {
-  padding: var(--spacing-xl);
-  text-align: center;
-  border-top: 1px solid var(--color-bg-tertiary);
-  background: var(--color-bg-secondary);
-}
-
-.app-footer__text {
-  font-size: 0.875rem;
-  color: var(--color-text-primary);
-  margin-bottom: var(--spacing-xs);
-}
-
-.app-footer__subtext {
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-  margin: 0;
+/* Ambient arena radial gradients */
+.arena-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 90% 45% at 50% 0%, rgba(26, 74, 156, 0.12) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 35% at 10% 90%, rgba(160, 64, 208, 0.05) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 30% at 90% 80%, rgba(26, 74, 156, 0.06) 0%, transparent 60%);
 }

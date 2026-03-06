@@ -1,35 +1,19 @@
-<!-- Root App Component -->
-<div class="app-root">
+<!-- Root App — Clash Royale Theme -->
+<div class="app-root min-h-screen flex flex-col font-cr"
+  style="background: linear-gradient(180deg, #080f1c 0%, #060e1a 100%);">
 
-  <!-- App Header -->
-  <header class="app-header">
-    <div class="app-header__content">
-      <div class="app-brand">
-        <span class="app-brand__icon">🎯</span>
-        <h1 class="app-brand__title">CRTracker</h1>
-      </div>
-      <nav class="app-nav">
-        <a routerLink="/" class="nav-link" routerLinkActive="nav-link--active">
-          <span class="nav-link__icon">🏠</span>
-          <span>Decks</span>
-        </a>
-      </nav>
-    </div>
-  </header>
+  <!-- Ambient arena background -->
+  <div class="arena-bg" aria-hidden="true"></div>
 
-  <!-- Main Content Area -->
-  <main class="app-main">
+  <!-- ══ HEADER ══ -->
+  <app-header />
+
+  <!-- ══ MAIN ══ -->
+  <main class="flex-1 relative z-10">
     <router-outlet />
   </main>
 
-  <!-- App Footer -->
-  <footer class="app-footer">
-    <p class="app-footer__text">
-      CRTracker - Strategic Assistant for Clash Royale Players
-    </p>
-    <p class="app-footer__subtext">
-      Based on Top 1000 ladder data analysis
-    </p>
-  </footer>
+  <!-- ══ FOOTER ══ -->
+  <app-footer />
 
 </div>

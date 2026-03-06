@@ -50,6 +50,11 @@ spec:
             secretKeyRef:
               name: crtracker-backend-secrets
               key: SECRET_KEY
+        - name: CR_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: crtracker-backend-secrets
+              key: CR_API_TOKEN
         - name: GROQ_API_KEY
           valueFrom:
             secretKeyRef:

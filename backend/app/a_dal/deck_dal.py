@@ -6,7 +6,8 @@ Handles all database operations related to decks and their matchups.
 from collections.abc import Sequence
 from typing import Any
 
-from sqlalchemy import Result, Select, and_, or_
+from sqlalchemy import Result, Select, and_, cast, or_, select
+from sqlalchemy import Float
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.a_dal.base_dal import BaseDAL
@@ -122,7 +123,7 @@ class DeckDAL(BaseDAL[Deck]):
         """
         stmt = (
             select(Deck)
-            .order_by(Deck.matchup_stats["meta_share"].desc())  # type: ignore
+            .order_by(cast(Deck.matchup_stats["meta_share"].as_string(), Float).desc())  # type: ignore
             .limit(limit)
         )
         result: Result = await self.session.execute(stmt)

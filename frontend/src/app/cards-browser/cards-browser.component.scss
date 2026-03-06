@@ -1,0 +1,80 @@
+/* ============================================
+   CARDS BROWSER — CLASH ROYALE THEME
+   ============================================ */
+
+/* Title gradient (same as global) */
+.cr-title-gradient {
+  background: linear-gradient(135deg, #f6c237 0%, #fde68a 50%, #c49120 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Search input */
+.search-input {
+  background: rgba(12, 30, 58, 0.8);
+  border: 1px solid rgba(246, 194, 55, 0.2);
+  color: #c8dcf0;
+  font-family: inherit;
+
+  &::placeholder {
+    color: rgba(74, 106, 156, 0.6);
+  }
+
+  &:focus {
+    border-color: rgba(246, 194, 55, 0.5);
+    box-shadow: 0 0 0 2px rgba(246, 194, 55, 0.1);
+    background: rgba(12, 30, 58, 0.95);
+  }
+}
+
+/* Filter pill group */
+.filter-group {
+  background: rgba(12, 30, 58, 0.6);
+  border: 1px solid rgba(26, 74, 156, 0.25);
+}
+
+/* Filter button */
+.filter-btn {
+  color: rgba(120, 168, 208, 0.7);
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #c0d8f0;
+  }
+
+  &.filter-btn-active {
+    background: rgba(246, 194, 55, 0.12);
+    color: #f6c237;
+    border: 1px solid rgba(246, 194, 55, 0.3);
+  }
+}
+
+/* Clear button */
+.clear-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(120, 168, 208, 0.7);
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #c0d8f0;
+  }
+}
+
+/* Cards grid: responsive, centred */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 1.25rem;
+  justify-items: center;
+}
+
+.card-entry {
+  cursor: default;
+  transition: transform 0.15s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+  }
+}
