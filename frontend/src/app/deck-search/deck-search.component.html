@@ -1,176 +1,208 @@
-<!-- Deck Search Component -->
-<div class="deck-search">
+<!-- Deck Search — Clash Royale Theme -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 py-8 font-cr">
 
-  <!-- Header -->
-  <header class="deck-search__header">
-    <h1 class="deck-search__title">
-      <span class="title-icon">🎯</span>
-      <span class="title-text">Deck Explorer</span>
-    </h1>
-    <p class="deck-search__subtitle">
-      Browse Top 1000 decks and discover matchup statistics
+  <!-- ══ HERO HEADER ══ -->
+  <header class="text-center mb-10">
+    <div class="flex items-center justify-center gap-4 mb-2">
+      <span class="text-5xl select-none" aria-hidden="true">🏆</span>
+      <h1 class="text-4xl sm:text-5xl font-black tracking-tight leading-none ds-title-gradient">
+        Deck Explorer
+      </h1>
+      <span class="text-5xl select-none" aria-hidden="true">🏆</span>
+    </div>
+    <p class="text-xs font-bold tracking-widest uppercase mt-2" style="color: #4a6a8c;">
+      Browse Top 1000 Decks &nbsp;·&nbsp; Discover Matchup Stats
     </p>
   </header>
 
-  <!-- Search Bar -->
-  <div class="deck-search__search">
-    <div class="search-bar">
-      <span class="search-bar__icon">🔍</span>
-      <input type="text" class="search-bar__input" placeholder="Search by archetype or deck name..."
-        [value]="searchQuery" (input)="onSearchInput($any($event.target).value)" />
+  <!-- ══ SEARCH BAR ══ -->
+  <div class="flex gap-3 mb-8">
+    <div class="ds-search-bar flex-1 flex items-center gap-3 px-4 py-3 rounded-xl">
+      <span class="text-lg opacity-30 select-none">🔍</span>
+      <input
+        type="text"
+        class="flex-1 bg-transparent font-semibold text-sm outline-none"
+        style="color: #c8dcf0;"
+        placeholder="Search archetype or deck name…"
+        [value]="searchQuery"
+        (input)="onSearchInput($any($event.target).value)" />
     </div>
-    <button class="import-btn" (click)="showImportModal = true">
-      <span class="import-btn__icon">📥</span>
+    <button class="ds-btn-import flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm cursor-pointer"
+            (click)="showImportModal = true">
+      <span>📥</span>
       <span>Import Player</span>
     </button>
   </div>
 
-  <!-- Error Banner -->
+  <!-- ══ ERROR BANNER ══ -->
   @if (hasError()) {
-  <div class="error-banner">
-    <span class="error-banner__icon">⚠️</span>
-    <span class="error-banner__message">{{ errorMessage() }}</span>
-    <button class="error-banner__dismiss" (click)="onDismissError()">✕</button>
+  <div class="flex items-center gap-3 px-4 py-3 mb-6 rounded-xl font-semibold text-sm"
+       style="background: rgba(224,48,32,0.1); border: 1px solid rgba(224,48,32,0.35); color: #ff7060;">
+    <span>⚠️</span>
+    <span class="flex-1">{{ errorMessage() }}</span>
+    <button class="opacity-60 hover:opacity-100 transition-opacity cursor-pointer bg-transparent border-0 text-inherit text-lg leading-none"
+            (click)="onDismissError()">✕</button>
   </div>
   }
 
-  <!-- Featured Decks -->
+  <!-- ══ POPULAR DECKS ══ -->
   @if (featuredDecks().length > 0 && !currentDeck()) {
-  <section class="deck-search__featured">
-    <h2 class="section-title">🏆 Popular Decks</h2>
-    <div class="featured-grid">
+  <section class="mb-10">
+    <h2 class="flex items-center gap-2 text-sm font-black tracking-widest uppercase mb-4"
+        style="color: var(--cr-gold);">
+      <span>👑</span> Popular Decks
+    </h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
       @for (deck of featuredDecks(); track deck.id) {
-      <div class="featured-card" (click)="onSelectDeck(deck.id)"
-        [class.featured-card--active]="currentDeck()?.id === deck.id">
-        <div class="featured-card__info">
-          <h3 class="featured-card__name">{{ deck.name }}</h3>
-          <span class="featured-card__archetype">{{ deck.archetype }}</span>
+      <button class="ds-featured-card text-left w-full px-4 py-3 rounded-xl cursor-pointer transition-all"
+              [class.ds-featured-card--active]="currentDeck()?.id === deck.id"
+              (click)="onSelectDeck(deck.id)">
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <h3 class="font-bold text-sm text-white truncate leading-tight">{{ deck.name }}</h3>
+            <span class="text-xs font-semibold tracking-widest uppercase" style="color: var(--cr-gold); opacity: 0.75;">{{ deck.archetype }}</span>
+          </div>
+          <span class="ds-elixir-pill shrink-0">💧 {{ deck.avg_elixir }}</span>
         </div>
-        <div class="featured-card__elixir">💧 {{ deck.avg_elixir }}</div>
-      </div>
+      </button>
       }
     </div>
   </section>
   }
 
-  <!-- Deck List / Details -->
-  <div class="deck-search__content" #deckDetailsSection>
+  <!-- ══ CONTENT AREA ══ -->
 
-    <!-- Left Panel: Deck List -->
-    @if (!currentDeck()) {
-    <div class="deck-list-panel">
-      @if (isLoading() && filteredDecks().length === 0) {
-      <app-loading-spinner message="Loading decks..." size="lg" />
-      } @else if (filteredDecks().length === 0) {
-      <div class="empty-state">
-        <span class="empty-state__icon">🔍</span>
-        <h3 class="empty-state__title">No decks found</h3>
-        <p class="empty-state__message">Try a different search term</p>
+  <!-- Deck List (when no deck selected) -->
+  @if (!currentDeck()) {
+  <div class="ds-deck-list-panel rounded-xl overflow-hidden">
+
+    @if (isLoading() && filteredDecks().length === 0) {
+      <app-loading-spinner message="Loading decks…" size="lg" />
+    } @else if (filteredDecks().length === 0) {
+      <div class="flex flex-col items-center justify-center py-20 gap-3 text-center">
+        <span class="text-5xl">🔍</span>
+        <h3 class="font-bold text-white text-base">No decks found</h3>
+        <p class="text-sm font-semibold" style="color: #4a6a8c;">Try a different search term</p>
       </div>
-      } @else {
-      <div class="deck-list">
+    } @else {
+      <div class="ds-deck-list overflow-y-auto" style="max-height: 680px;">
         @for (deck of filteredDecks(); track deck.id) {
-        <div class="deck-list-item" (click)="onSelectDeck(deck.id)">
-          <div class="deck-list-item__info">
-            <h3 class="deck-list-item__name">{{ deck.name }}</h3>
-            <span class="deck-list-item__archetype">{{ deck.archetype }}</span>
+        <button class="ds-deck-item w-full text-left px-4 py-3 flex items-center justify-between gap-3 cursor-pointer transition-all border-0"
+                (click)="onSelectDeck(deck.id)">
+          <div class="min-w-0">
+            <h3 class="font-semibold text-sm text-white truncate leading-snug">{{ deck.name }}</h3>
+            <span class="text-xs font-semibold tracking-widest uppercase" style="color: #4a6a8c;">{{ deck.archetype }}</span>
           </div>
-          <div class="deck-list-item__meta">
-            <span class="elixir-badge">💧 {{ deck.avg_elixir }}</span>
-          </div>
-        </div>
+          <span class="ds-elixir-pill shrink-0">💧{{ deck.avg_elixir }}</span>
+        </button>
         }
       </div>
-      }
-    </div>
-    }
-
-    <!-- Right Panel: Deck Details & Matchups -->
-    @if (currentDeck()) {
-    <div class="deck-details-panel">
-      <!-- Back Button -->
-      <button class="back-btn" (click)="onClearSelection()">
-        <span class="back-btn__icon">←</span>
-        <span>Back to list</span>
-      </button>
-
-      <!-- Deck Display -->
-      <div class="deck-details__deck">
-        <app-deck-display [deck]="currentDeck()!" [cardSize]="'lg'" [showMeta]="true" />
-      </div>
-
-      <!-- Loading Stats -->
-      @if (isLoading() && !currentDeckStats()) {
-      <app-loading-spinner message="Loading matchup statistics..." size="md" />
-      }
-
-      <!-- Matchup Statistics -->
-      @if (currentDeckStats()) {
-      <div class="deck-details__stats">
-        <!-- Global Stats -->
-        <div class="global-stats">
-          <div class="stat-card">
-            <span class="stat-card__label">Global Winrate</span>
-            <app-winrate-badge [winrate]="currentDeckStats()!.global_winrate" [size]="'lg'" />
-          </div>
-          <div class="stat-card">
-            <span class="stat-card__label">Meta Share</span>
-            <span class="stat-card__value">{{ currentDeckStats()!.meta_share.toFixed(1) }}%</span>
-          </div>
-          <div class="stat-card">
-            <span class="stat-card__label">Matchups</span>
-            <span class="stat-card__value">{{ currentDeckStats()!.matchups.length }}</span>
-          </div>
-        </div>
-
-        <!-- Matchups List -->
-        <div class="matchups-section">
-          <h2 class="section-title">⚔️ Matchup Statistics</h2>
-          <p class="section-subtitle">
-            Click any matchup to see Oracle tactical advice
-          </p>
-          <div class="matchups-list">
-            @for (matchup of currentDeckStats()!.matchups; track matchup.opponent_deck_id) {
-            <app-matchup-card [matchup]="matchup" [playerDeckId]="currentDeck()!.id"
-              (clicked)="onViewMatchup(currentDeck()!.id, $event)" />
-            }
-          </div>
-        </div>
-      </div>
-      }
-    </div>
     }
 
   </div>
+  }
 
-  <!-- Import Modal -->
-  @if (showImportModal) {
-  <div class="modal-overlay" (click)="showImportModal = false">
-    <div class="modal" (click)="$event.stopPropagation()">
-      <div class="modal__header">
-        <h2 class="modal__title">Import Player Deck</h2>
-        <button class="modal__close" (click)="showImportModal = false">✕</button>
-      </div>
-      <div class="modal__body">
-        <p class="import-hint">
-          Enter a player tag to import their current deck
-        </p>
-        <input type="text" class="import-input" placeholder="#ABC123DE or ABC123DE" [value]="playerTag"
-          (input)="playerTag = $any($event.target).value" (keyup.enter)="onImportPlayer()" maxlength="15" />
-        @if (playerTagError) {
-        <p class="import-error">{{ playerTagError }}</p>
-        }
-      </div>
-      <div class="modal__footer">
-        <button class="btn btn--secondary" (click)="showImportModal = false">
-          Cancel
-        </button>
-        <button class="btn btn--primary" (click)="onImportPlayer()">
-          Import Deck
-        </button>
-      </div>
+  <!-- Deck Details (when deck selected) -->
+  @if (currentDeck()) {
+  <div class="ds-details-panel" #deckDetailsSection>
+
+    <!-- Back button -->
+    <button class="ds-back-btn flex items-center gap-2 mb-6 px-4 py-2 rounded-lg font-bold text-sm cursor-pointer transition-all"
+            (click)="onClearSelection()">
+      <span>←</span>
+      <span>Back to list</span>
+    </button>
+
+    <!-- Deck display card -->
+    <div class="mb-6 p-4 rounded-xl" style="background: rgba(10,20,40,0.55); border: 1px solid rgba(246,194,55,0.18);">
+      <app-deck-display [deck]="currentDeck()!" [cardSize]="'lg'" [showMeta]="true" />
     </div>
+
+    <!-- Loading stats -->
+    @if (isLoading() && !currentDeckStats()) {
+      <app-loading-spinner message="Loading matchup statistics…" size="md" />
+    }
+
+    <!-- Stats + Matchups -->
+    @if (currentDeckStats()) {
+    <div class="ds-stats-section">
+
+      <!-- Global stat pills -->
+      <div class="flex flex-wrap gap-3 mb-6">
+        <div class="ds-stat-pill">
+          <span class="ds-stat-pill__label">Global WR</span>
+          <app-winrate-badge [winrate]="currentDeckStats()!.global_winrate" [size]="'md'" />
+        </div>
+        <div class="ds-stat-pill">
+          <span class="ds-stat-pill__label">Meta Share</span>
+          <span class="ds-stat-pill__val">{{ currentDeckStats()!.meta_share.toFixed(1) }}%</span>
+        </div>
+        <div class="ds-stat-pill">
+          <span class="ds-stat-pill__label">Matchups</span>
+          <span class="ds-stat-pill__val">{{ currentDeckStats()!.matchups.length }}</span>
+        </div>
+      </div>
+
+      <!-- Matchups list -->
+      <div>
+        <h2 class="flex items-center gap-2 text-sm font-black tracking-widest uppercase mb-3"
+            style="color: var(--cr-gold);">
+          <span>⚔️</span> Matchup Statistics
+        </h2>
+        <p class="text-xs font-semibold mb-4" style="color: #4a6a8c;">
+          Click any matchup to see Oracle tactical advice
+        </p>
+        <div class="flex flex-col gap-2">
+          @for (matchup of currentDeckStats()!.matchups; track matchup.opponent_deck_id) {
+          <app-matchup-card
+            [matchup]="matchup"
+            [playerDeckId]="currentDeck()!.id"
+            (clicked)="onViewMatchup(currentDeck()!.id, $event)" />
+          }
+        </div>
+      </div>
+
+    </div>
+    }
+
   </div>
   }
 
 </div>
+
+<!-- ══ IMPORT MODAL ══ -->
+@if (showImportModal) {
+<div class="ds-modal-overlay" (click)="showImportModal = false">
+  <div class="ds-modal" (click)="$event.stopPropagation()">
+
+    <div class="ds-modal__header">
+      <h2 class="ds-modal__title">📥 Import Player Deck</h2>
+      <button class="ds-modal__close cursor-pointer" (click)="showImportModal = false">✕</button>
+    </div>
+
+    <div class="ds-modal__body">
+      <p class="text-sm font-semibold mb-3" style="color: #7b96aa;">
+        Enter a player tag to import their current deck
+      </p>
+      <input type="text"
+             class="ds-tag-input w-full px-4 py-3 rounded-lg font-bold text-sm outline-none"
+             placeholder="#ABC123DE or ABC123DE"
+             [value]="playerTag"
+             (input)="playerTag = $any($event.target).value"
+             (keyup.enter)="onImportPlayer()"
+             maxlength="15" />
+      @if (playerTagError) {
+        <p class="mt-2 text-xs font-bold" style="color: #f87171;">{{ playerTagError }}</p>
+      }
+    </div>
+
+    <div class="ds-modal__footer">
+      <button class="ds-btn-secondary cursor-pointer px-5 py-2.5 rounded-lg font-bold text-sm"
+              (click)="showImportModal = false">Cancel</button>
+      <button class="ds-btn-primary cursor-pointer px-5 py-2.5 rounded-lg font-bold text-sm"
+              (click)="onImportPlayer()">Import Deck</button>
+    </div>
+
+  </div>
+</div>
+}

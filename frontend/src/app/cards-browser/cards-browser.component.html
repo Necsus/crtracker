@@ -1,0 +1,103 @@
+<!-- Cards Browser — Clash Royale Theme -->
+<div class="min-h-screen font-cr py-8 px-4">
+  <div class="max-w-7xl mx-auto">
+
+    <!-- ══ HERO HEADER ══ -->
+    <div class="text-center mb-10">
+      <h2 class="text-4xl font-black tracking-wide mb-2">
+        <span class="cr-title-gradient">🃏 Card Catalogue</span>
+      </h2>
+      <p class="text-sm font-bold tracking-widest uppercase" style="color: #4a6a9c;">
+        {{ totalCount() }} cards in the arena
+      </p>
+    </div>
+
+    <!-- ══ SEARCH BAR ══ -->
+    <div class="relative mb-6 max-w-lg mx-auto">
+      <span class="absolute left-4 top-1/2 -translate-y-1/2 text-lg pointer-events-none">🔍</span>
+      <input type="text" placeholder="Search cards…" [value]="searchQuery()"
+        (input)="onSearch($any($event.target).value)"
+        class="search-input w-full pl-12 pr-4 py-3 rounded-xl text-sm font-bold outline-none transition-all" />
+    </div>
+
+    <!-- ══ FILTERS ══ -->
+    <div class="flex flex-wrap justify-center gap-3 mb-8">
+
+      <!-- Rarity -->
+      <div class="filter-group flex items-center gap-1 px-2 py-1 rounded-xl">
+        @for (item of rarities; track item.value) {
+        <button (click)="setRarity(item.value)" [ngClass]="{ 'filter-btn-active': rarityFilter() === item.value }"
+          class="filter-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all">
+          <span>{{ item.emoji }}</span>
+          <span>{{ item.label }}</span>
+        </button>
+        }
+      </div>
+
+      <!-- Type -->
+      <div class="filter-group flex items-center gap-1 px-2 py-1 rounded-xl">
+        @for (item of types; track item.value) {
+        <button (click)="setType(item.value)" [ngClass]="{ 'filter-btn-active': typeFilter() === item.value }"
+          class="filter-btn flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all">
+          <span>{{ item.emoji }}</span>
+          <span>{{ item.label }}</span>
+        </button>
+        }
+      </div>
+
+    </div>
+
+    <!-- ══ RESULTS META ══ -->
+    <div class="text-center mb-6 flex items-center justify-center gap-4">
+      <p class="text-xs font-bold" style="color: #4a6a9c;">
+        @if (filteredCount() !== totalCount()) {
+        {{ filteredCount() }} / {{ totalCount() }} cards
+        } @else {
+        {{ totalCount() }} cards
+        }
+      </p>
+      @if (rarityFilter() !== 'all' || typeFilter() !== 'all' || searchQuery()) {
+      <button (click)="clearFilters()" class="clear-btn text-xs font-bold px-3 py-1 rounded-lg transition-all">
+        ✕ Clear filters
+      </button>
+      }
+    </div>
+
+    <!-- ══ LOADING ══ -->
+    @if (loading()) {
+    <div class="flex justify-center py-20">
+      <app-loading-spinner />
+    </div>
+    }
+
+    <!-- ══ ERROR ══ -->
+    @if (error()) {
+    <div class="text-center py-20">
+      <p class="text-2xl mb-3">⚠️</p>
+      <p class="text-sm font-bold" style="color: #c06040;">{{ error() }}</p>
+    </div>
+    }
+
+    <!-- ══ CARDS GRID ══ -->
+    @if (!loading() && !error()) {
+    @if (filteredCards().length === 0) {
+    <div class="text-center py-20">
+      <p class="text-4xl mb-4">🃏</p>
+      <p class="text-lg font-bold" style="color: #4a6a9c;">No cards match your filters</p>
+      <button (click)="clearFilters()" class="clear-btn mt-4 text-sm font-bold px-4 py-2 rounded-lg transition-all">
+        Clear filters
+      </button>
+    </div>
+    } @else {
+    <div class="cards-grid">
+      @for (card of displayCards(); track card.id) {
+      <div class="card-entry flex flex-col items-center gap-2">
+        <app-card-icon [card]="card" size="lg" [showElixir]="true" />
+      </div>
+      }
+    </div>
+    }
+    }
+
+  </div>
+</div>

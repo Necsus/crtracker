@@ -11,7 +11,7 @@ export interface Card {
   name: string;
   elixir: number;
   rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'champion';
-  type: 'troop' | 'spell' | 'building';
+  type?: 'troop' | 'spell' | 'building';
   icon_url?: string;
 }
 
@@ -56,6 +56,15 @@ export interface DeckStats {
   matchups: MatchupStats[];
   global_winrate: number;
   meta_share: number;
+}
+
+/**
+ * Card returned by the /api/v1/cards endpoint.
+ * `type` can be null for cards whose type was not stored at sync time.
+ */
+export interface CardApiItem extends Omit<Card, 'type'> {
+  type?: 'troop' | 'spell' | 'building' | null;
+  description?: string;
 }
 
 /* ============================================

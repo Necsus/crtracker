@@ -3,12 +3,47 @@
 
 <head>
   <meta charset="utf-8">
-  <title>CRTracker - Clash Royale Strategy Assistant</title>
+  <title>CRTracker — Clash Royale Strategy</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description"
     content="AI-powered tactical analysis for Clash Royale players based on Top 1000 ladder data">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+  <!-- Google Fonts: Exo 2 for CR aesthetic -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700&display=swap"
+    rel="stylesheet">
+
+  <!-- TailwindCSS CDN (Play CDN) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'cr-gold': '#f6c237',
+            'cr-gold-d': '#c49120',
+            'cr-gold-dd': '#8b6510',
+            'cr-night': '#060e1a',
+            'cr-navy': '#0c1e3a',
+            'cr-navy-l': '#142d55',
+            'cr-blue': '#1a4a9c',
+            'cr-common': '#7b96aa',
+            'cr-rare': '#e07030',
+            'cr-epic': '#a040d0',
+            'cr-legendary': '#f6c237',
+            'cr-champion': '#e03020',
+            'cr-elixir': '#b030e0',
+          },
+          fontFamily: {
+            cr: ['"Exo 2"', 'system-ui', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
 </head>
 
 <body>

@@ -1,0 +1,29 @@
+/* ============================================
+   HEADER COMPONENT — CLASH ROYALE THEME
+   ============================================ */
+
+.app-header {
+  background: rgba(6, 14, 26, 0.93);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(246, 194, 55, 0.12);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.6);
+}
+
+.cr-title-gradient {
+  background: linear-gradient(135deg, #f6c237 0%, #fde68a 50%, #c49120 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.nav-active {
+  background: rgba(246, 194, 55, 0.1) !important;
+  color: #f6c237 !important;
+  border: 1px solid rgba(246, 194, 55, 0.3);
+  border-radius: 0.5rem;
+}
+
+.nav-link:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #c0d8f0 !important;
+}

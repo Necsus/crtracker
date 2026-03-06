@@ -1,10 +1,7 @@
-<!-- Winrate Badge Component -->
+<!-- Winrate Badge — CR Style -->
 <div class="winrate-badge" [class]="'winrate-badge--' + size() + ' winrate-badge--' + colorClass()">
-
   @if (showIcon()) {
   <span class="winrate-badge__icon">{{ icon() }}</span>
   }
-
   <span class="winrate-badge__value">{{ displayLabel() }}</span>
-
 </div>

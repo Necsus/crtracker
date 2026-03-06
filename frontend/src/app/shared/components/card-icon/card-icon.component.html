@@ -1,24 +1,37 @@
-<!-- Card Icon Component -->
+<!-- Card Icon — Clash Royale Style -->
 <div [ngClass]="cssClasses()" [attr.aria-label]="card().name + ' - ' + card().elixir + ' elixir'">
 
-  <!-- Card Image / Icon -->
-  @if (imageUrl()) {
-  <img [src]="imageUrl()" [alt]="card().name" class="card-icon__image" />
-  } @else {
-  <!-- Fallback placeholder with card initial -->
-  <div class="card-icon__placeholder">
-    <span class="card-icon__initial">{{ initial() }}</span>
-  </div>
-  }
+  <!-- Card frame -->
+  <div class="card-icon__frame">
 
-  <!-- Elixir Cost Badge -->
+    <!-- Art area -->
+    <div class="card-icon__art">
+      @if (imageUrl()) {
+      <img [src]="imageUrl()" [alt]="card().name" class="card-icon__image" />
+      } @else {
+      <div class="card-icon__placeholder">
+        <span class="card-icon__initial">{{ initial() }}</span>
+      </div>
+      }
+    </div>
+
+    <!-- Name banner -->
+    @if (size() !== 'sm') {
+    <div class="card-icon__banner">
+      <span class="card-icon__name">{{ card().name }}</span>
+    </div>
+    }
+
+  </div>
+
+  <!-- Elixir cost badge -->
   @if (showElixir()) {
-  <div class="card-icon__elixir" [class]="'card-icon__elixir--' + elixirColor()">
-    <span class="elixir-drop">💧</span>
-    <span class="elixir-value">{{ card().elixir }}</span>
+  <div class="card-icon__elixir">
+    <span class="card-icon__elixir-val">{{ card().elixir }}</span>
   </div>
   }
 
-  <!-- Rarity Glow Border -->
-  <div class="card-icon__glow"></div>
+  <!-- Shine overlay on hover -->
+  <div class="card-icon__shine" aria-hidden="true"></div>
+
 </div>

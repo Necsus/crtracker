@@ -8,6 +8,7 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import type {
+  CardApiItem,
   Deck,
   DeckListItem,
   DeckStats,
@@ -80,5 +81,23 @@ export class DeckDal {
       player_tag: playerTag,
     });
     return this.http.post<PlayerImportResponse>(url, {});
+  }
+
+  /* ============================================
+     CARDS
+     ============================================ */
+
+  /**
+   * List all cards, with optional rarity/type filters and name search
+   */
+  listCards(params: {
+    rarity?: string;
+    type?: string;
+    q?: string;
+    offset?: number;
+    limit?: number;
+  } = {}): Observable<CardApiItem[]> {
+    const url = buildUrl(`${this.basePath}/cards`, params);
+    return this.http.get<CardApiItem[]>(url);
   }
 }

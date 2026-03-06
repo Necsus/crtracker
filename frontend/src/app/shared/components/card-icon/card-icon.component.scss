@@ -1,163 +1,218 @@
 /* ============================================
-   CARD ICON COMPONENT STYLES
+   CARD ICON — CLASH ROYALE CARD FRAME
    ============================================ */
 
 .card-icon {
   position: relative;
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, var(--color-bg-tertiary), var(--color-bg-secondary));
-  box-shadow: var(--shadow-md);
-  overflow: hidden;
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  flex-shrink: 0;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease;
+  overflow: visible;
+  /* allow elixir badge overflow */
 
-  /* Hover effect */
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
+    transform: translateY(-4px) scale(1.06);
+    z-index: 20;
+    filter: brightness(1.1);
   }
 
-  /* Size variants */
+  /* ──── SIZE VARIANTS ──── */
   &--sm {
-    width: 2.5rem;
-    height: 3rem;
+    width: 2.75rem;
+    height: 3.3rem;
   }
 
   &--md {
-    width: 3.5rem;
-    height: 4.25rem;
+    width: 4rem;
+    height: 5rem;
   }
 
   &--lg {
-    width: 4.5rem;
-    height: 5.5rem;
-  }
-
-  /* ============================================
-     RARITY STYLES (Glow colors)
-     ============================================ */
-
-  &--common {
-    border: 2px solid #94a3b8;
-  }
-
-  &--rare {
-    border: 2px solid #f59e0b;
-    box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
-  }
-
-  &--epic {
-    border: 2px solid #a855f7;
-    box-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
-  }
-
-  &--legendary {
-    border: 2px solid #fbbf24;
-    box-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
-    animation: legendary-pulse 2s ease-in-out infinite;
-  }
-
-  &--champion {
-    border: 2px solid #ef4444;
-    box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
-  }
-
-  /* Card type background tint */
-  &--spell {
-    background: linear-gradient(135deg, #1e3a8a, #1e40af);
-  }
-
-  &--troop {
-    background: linear-gradient(135deg, #1e293b, #334155);
-  }
-
-  &--building {
-    background: linear-gradient(135deg, #14532d, #166534);
+    width: 5.25rem;
   }
 }
 
-/* Legendary glow animation */
-@keyframes legendary-pulse {
-
-  0%,
-  100% {
-    box-shadow: 0 0 15px rgba(251, 191, 36, 0.4);
-  }
-
-  50% {
-    box-shadow: 0 0 25px rgba(251, 191, 36, 0.6);
-  }
+/* ──── CARD FRAME ──── */
+.card-icon__frame {
+  width: 100%;
+  height: 100%;
+  border-radius: 7px;
+  border: 2px solid var(--cr-common);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(160deg, #141e30 0%, #0a1220 100%);
+  position: relative;
 }
 
-/* Card Image */
+/* ──── ART AREA ──── */
+.card-icon__art {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(150deg, #162038 0%, #0c1624 100%);
+}
+
 .card-icon__image {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  padding: 0;
 }
 
-/* Card Placeholder (fallback) */
 .card-icon__placeholder {
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--color-bg-tertiary), var(--color-bg-secondary));
 }
 
 .card-icon__initial {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--color-text-secondary);
+  font-family: "Exo 2", sans-serif;
+  font-weight: 900;
+  font-size: 1.6em;
+  color: rgba(255, 255, 255, 0.2);
+  letter-spacing: -0.02em;
 }
 
-/* Elixir Badge */
-.card-icon__elixir {
-  position: absolute;
-  bottom: 2px;
-  right: 2px;
+/* ──── NAME BANNER ──── */
+.card-icon__banner {
+  background: linear-gradient(90deg, rgba(8, 16, 32, 0.95) 0%, rgba(14, 26, 48, 0.95) 100%);
+  padding: 2px 4px;
+  min-height: 16px;
   display: flex;
   align-items: center;
-  gap: 2px;
-  padding: 2px 4px;
-  border-radius: var(--radius-sm);
-  font-size: 0.7rem;
+  justify-content: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
+}
+
+.card-icon__name {
+  font-family: "Exo 2", sans-serif;
   font-weight: 700;
-  background: rgba(15, 23, 42, 0.9);
-  backdrop-filter: blur(4px);
-
-  /* Elixir cost colors */
-  &--low {
-    color: #22c55e;
-    border: 1px solid rgba(34, 197, 94, 0.5);
-  }
-
-  &--medium {
-    color: #f59e0b;
-    border: 1px solid rgba(245, 158, 11, 0.5);
-  }
-
-  &--high {
-    color: #ef4444;
-    border: 1px solid rgba(239, 68, 68, 0.5);
-  }
+  font-size: 0.5rem;
+  color: #c8dcf0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  max-width: 100%;
+  display: block;
 }
 
-.elixir-drop {
+.card-icon--lg .card-icon__name {
   font-size: 0.6rem;
+  min-height: 20px;
 }
 
-.elixir-value {
-  font-size: 0.75rem;
+/* ──── ELIXIR BADGE ──── */
+.card-icon__elixir {
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #e060d8, #901080);
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 0 2px 6px rgba(160, 32, 160, 0.7), 0 0 0 1px rgba(220, 80, 200, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
 }
 
-/* Glow effect */
-.card-icon__glow {
+.card-icon__elixir-val {
+  font-family: "Exo 2", sans-serif;
+  font-weight: 900;
+  font-size: 0.55rem;
+  color: #fff;
+  line-height: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.card-icon--sm .card-icon__elixir {
+  width: 1rem;
+  height: 1rem;
+  top: -4px;
+  left: -4px;
+}
+
+.card-icon--sm .card-icon__elixir-val {
+  font-size: 0.47rem;
+}
+
+.card-icon--lg .card-icon__elixir {
+  width: 1.45rem;
+  height: 1.45rem;
+  top: -6px;
+  left: -6px;
+}
+
+.card-icon--lg .card-icon__elixir-val {
+  font-size: 0.65rem;
+}
+
+/* ──── HOVER SHINE ──── */
+.card-icon__shine {
   position: absolute;
   inset: 0;
+  border-radius: 7px;
   pointer-events: none;
-  border-radius: inherit;
+  opacity: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, transparent 50%);
+  transition: opacity 0.15s ease;
+}
+
+.card-icon:hover .card-icon__shine {
+  opacity: 1;
+}
+
+/* ============================================
+   RARITY BORDERS + GLOW
+   ============================================ */
+
+.card-icon--common .card-icon__frame {
+  border-color: #7b96aa;
+}
+
+.card-icon--rare .card-icon__frame {
+  border-color: #e07030;
+  box-shadow: 0 0 8px rgba(224, 112, 48, 0.4), inset 0 0 4px rgba(224, 112, 48, 0.06);
+}
+
+.card-icon--epic .card-icon__frame {
+  border-color: #a040d0;
+  animation: epic-pulse 3s ease-in-out infinite;
+}
+
+.card-icon--legendary .card-icon__frame {
+  border-color: #f6c237;
+  border-width: 2.5px;
+  animation: legendary-shimmer 2.5s ease-in-out infinite;
+}
+
+.card-icon--champion .card-icon__frame {
+  border-color: #e03020;
+  border-width: 2.5px;
+  animation: champion-pulse 2s ease-in-out infinite;
+}
+
+/* ============================================
+   TYPE TINTS
+   ============================================ */
+
+.card-icon--spell .card-icon__art {
+  background: linear-gradient(150deg, #18106a 0%, #0d0a3a 100%);
+}
+
+.card-icon--building .card-icon__art {
+  background: linear-gradient(150deg, #1a3010 0%, #0d1e08 100%);
 }
