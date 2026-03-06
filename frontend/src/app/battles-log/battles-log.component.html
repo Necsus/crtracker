@@ -10,6 +10,11 @@
       <p class="text-sm font-bold tracking-widest uppercase" style="color: #4a6a9c;">
         {{ total() | number }} battles recorded
       </p>
+      <a routerLink="/players"
+        class="inline-flex items-center gap-1.5 mt-3 text-xs font-bold px-4 py-1.5 rounded-xl transition-all"
+        style="background:rgba(246,194,55,0.10); border:1px solid #f6c23755; color:#f6c237;">
+        🏆 View Top Players Leaderboard →
+      </a>
     </div>
 
     <!-- ══ TYPE FILTER ══ -->
@@ -74,7 +79,8 @@
             [class.team-loser]="battle.winner_tag && !isWinner(battle, battle.team1_tag)">
             <div class="flex items-center justify-between mb-2">
               <div>
-                <p class="text-sm font-black" style="color:#b8cce8">{{ battle.team1_name || battle.team1_tag }}</p>
+                <a [routerLink]="['/players', battle.team1_tag]" class="text-sm font-black player-link block"
+                  style="color:#b8cce8">{{ battle.team1_name || battle.team1_tag }}</a>
                 <p class="text-xs font-bold" style="color:#3a5a8a">{{ battle.team1_tag }}</p>
               </div>
               <div class="flex flex-col items-end gap-0.5">
@@ -117,7 +123,8 @@
             [class.team-loser]="battle.winner_tag && !isWinner(battle, battle.team2_tag)">
             <div class="flex items-center justify-between mb-2">
               <div>
-                <p class="text-sm font-black" style="color:#b8cce8">{{ battle.team2_name || battle.team2_tag }}</p>
+                <a [routerLink]="['/players', battle.team2_tag]" class="text-sm font-black player-link block"
+                  style="color:#b8cce8">{{ battle.team2_name || battle.team2_tag }}</a>
                 <p class="text-xs font-bold" style="color:#3a5a8a">{{ battle.team2_tag }}</p>
               </div>
               <div class="flex flex-col items-end gap-0.5">

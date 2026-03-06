@@ -32,6 +32,16 @@ export const appRoutes: Routes = [
       import('./oracle-detail/oracle-detail.routes').then((m) => m.ORACLE_DETAIL_ROUTES),
   },
   {
+    path: 'players',
+    loadChildren: () =>
+      import('./players-list/players-list.routes').then((m) => m.PLAYERS_LIST_ROUTES),
+  },
+  {
+    path: 'players/:tag',
+    loadChildren: () =>
+      import('./player-detail/player-detail.routes').then((m) => m.PLAYER_DETAIL_ROUTES),
+  },
+  {
     path: '**',
     redirectTo: '',
     pathMatch: 'full',

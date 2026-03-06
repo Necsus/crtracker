@@ -170,27 +170,67 @@ export interface OracleRequest {
    ============================================ */
 
 /**
- * Clash Royale player profile
+ * A single card inside a player's current deck (from /api/v1/players/:tag)
  */
-export interface PlayerProfile {
-  tag: string;
+export interface PlayerCardItem {
+  id: number | null;
   name: string;
-  trophies: number;
-  best_trophies: number;
-  arena: string;
-  wins: number;
-  losses: number;
-  current_deck?: Card[];
+  elixir_cost: number | null;
+  rarity: string | null;
+  level: number | null;
+  icon_url: string | null;
 }
 
 /**
- * Response after importing a player deck
+ * Full player profile returned by GET /api/v1/players/:tag
+ */
+export interface PlayerProfile {
+  tag: string;
+  name: string | null;
+  trophies: number | null;
+  best_trophies: number | null;
+  exp_level: number | null;
+  wins: number | null;
+  losses: number | null;
+  battle_count: number | null;
+  league_number: number | null;
+  league_rank: number | null;
+  season: string | null;
+  current_deck: PlayerCardItem[];
+}
+
+/**
+ * Lightweight player entry for leaderboard list views
+ */
+export interface PlayerListItem {
+  tag: string;
+  name: string | null;
+  trophies: number | null;
+  best_trophies: number | null;
+  league_number: number | null;
+  league_rank: number | null;
+  season: string | null;
+}
+
+/**
+ * Paginated list of players returned by GET /api/v1/players
+ */
+export interface PlayerListResponse {
+  items: PlayerListItem[];
+  total: number;
+  offset: number;
+  limit: number;
+}
+
+/**
+ * Response after importing a player deck (legacy, kept for compatibility)
  */
 export interface PlayerImportResponse {
   player: PlayerProfile;
   deck?: Deck;
   message: string;
 }
+
 
 /* ============================================
    API RESPONSE WRAPPERS

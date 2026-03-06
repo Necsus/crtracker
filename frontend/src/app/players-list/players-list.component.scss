@@ -1,0 +1,103 @@
+/* ============================================================
+   PLAYERS LIST — Component Styles
+   Clash Royale themed leaderboard page
+   ============================================================ */
+
+/* ── Season filter pills ───────────────────────────────────── */
+.filter-pill {
+  background: rgba(12, 30, 58, 0.7);
+  border: 1px solid #1c3a6a;
+  color: #4a6a9c;
+
+  &:hover {
+    border-color: #f6c23755;
+    color: #b8cce8;
+  }
+
+  &.filter-active {
+    background: rgba(246, 194, 55, 0.12);
+    border-color: #f6c23788;
+    color: #f6c237;
+  }
+}
+
+/* ── Table / row card ──────────────────────────────────────── */
+.player-row {
+  background: linear-gradient(135deg, #0c1e3a 0%, #091628 100%);
+  border: 1px solid #1c3a6a;
+  transition: border-color 0.15s ease;
+
+  &:hover {
+    border-color: #2c4a8a;
+  }
+}
+
+/* ── Rank badge ────────────────────────────────────────────── */
+.rank-number {
+  color: #4a6a9c;
+  font-weight: 900;
+  font-size: 0.85rem;
+  min-width: 36px;
+  text-align: right;
+}
+
+.rank-top3 {
+  font-size: 1.1rem;
+}
+
+/* ── Name / tag ────────────────────────────────────────────── */
+.player-name-link {
+  color: #b8cce8;
+  font-weight: 800;
+  transition: color 0.15s;
+
+  &:hover {
+    color: #f6c237;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+}
+
+.player-tag {
+  color: #3a5a8a;
+  font-size: 0.7rem;
+  font-family: monospace;
+}
+
+/* ── Trophy / stats chips ──────────────────────────────────── */
+.trophy-value {
+  color: #f6c237;
+  font-weight: 900;
+}
+
+.best-trophy-value {
+  color: #a0784a;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+/* ── Pagination ────────────────────────────────────────────── */
+.page-btn {
+  background: #0c1e3a;
+  border: 1px solid #1c3a6a;
+  color: #7ba8d0;
+
+  &:hover:not(:disabled) {
+    border-color: #f6c23755;
+    color: #f6c237;
+  }
+
+  &.page-btn-disabled,
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+}
+
+/* ── Title gradient ────────────────────────────────────────── */
+.cr-title-gradient {
+  background: linear-gradient(135deg, #f6c237 0%, #e8a020 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}

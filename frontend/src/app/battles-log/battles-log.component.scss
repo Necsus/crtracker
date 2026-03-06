@@ -114,6 +114,17 @@
   min-width: 36px;
 }
 
+/* ── Player link in battle rows ────────────────────────────── */
+.player-link {
+  transition: color 0.15s;
+
+  &:hover {
+    color: #f6c237 !important;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+}
+
 /* ── Pagination ────────────────────────────────────────────── */
 .page-btn {
   background: #0c1e3a;

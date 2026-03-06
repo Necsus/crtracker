@@ -1,0 +1,152 @@
+<!-- Player Detail — Clash Royale Theme -->
+<div class="min-h-screen font-cr py-8 px-4">
+  <div class="max-w-4xl mx-auto">
+
+    <!-- ══ BACK LINK ══ -->
+    <a routerLink="/players" class="back-link inline-flex items-center gap-2 mb-8 text-sm font-bold transition-all">
+      ← Back to Leaderboard
+    </a>
+
+    <!-- ══ LOADING ══ -->
+    @if (loading()) {
+    <div class="flex justify-center py-32">
+      <app-loading-spinner />
+    </div>
+    }
+
+    <!-- ══ ERROR ══ -->
+    @if (error()) {
+    <div class="text-center py-32">
+      <p class="text-5xl mb-4">⚠️</p>
+      <p class="text-lg font-bold" style="color: #c06040;">{{ error() }}</p>
+      <a routerLink="/players"
+        class="back-link inline-block mt-6 text-sm font-bold px-5 py-2 rounded-xl transition-all">
+        ← Return to Leaderboard
+      </a>
+    </div>
+    }
+
+    <!-- ══ PLAYER CONTENT ══ -->
+    @if (!loading() && !error() && player()) {
+    @let p = player()!;
+
+    <!-- ── HERO BANNER ───────────────────────────────── -->
+    <div class="hero-banner rounded-2xl p-6 mb-6">
+      <div class="flex flex-col sm:flex-row items-center sm:items-start gap-4">
+
+        <!-- Avatar placeholder -->
+        <div class="shrink-0 w-20 h-20 rounded-2xl flex items-center justify-center text-4xl"
+          style="background: #0a1828; border: 2px solid #1c3a6a;">
+          🏆
+        </div>
+
+        <!-- Player info -->
+        <div class="flex-1 text-center sm:text-left">
+          <h1 class="text-3xl font-black tracking-wide mb-1 cr-title-gradient">{{ p.name ?? p.tag }}</h1>
+          <p class="text-sm font-mono mb-3" style="color: #4a6a9c;">#{{ p.tag }}</p>
+
+          <div class="flex flex-wrap justify-center sm:justify-start gap-2">
+            @if (p.league_rank) {
+            <span class="rank-badge">🥇 Rank #{{ p.league_rank }}</span>
+            }
+            @if (p.season) {
+            <span class="badge-pill text-xs"
+              style="background:#1c3a6a; color:#a8bcd8; border-radius:999px; padding:2px 10px;">
+              📅 {{ p.season }}
+            </span>
+            }
+            @if (p.exp_level) {
+            <span class="badge-pill text-xs"
+              style="background:#1c3a6a; color:#a8bcd8; border-radius:999px; padding:2px 10px;">
+              ⭐ Level {{ p.exp_level }}
+            </span>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── STATS GRID ────────────────────────────────── -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+
+      <div class="stat-box rounded-xl p-4 text-center">
+        <p class="stat-label text-xs font-bold uppercase tracking-widest mb-1">Trophies</p>
+        <p class="stat-value text-2xl font-black" style="color:#f6c237;">{{ p.trophies ?? '—' }}</p>
+      </div>
+
+      <div class="stat-box rounded-xl p-4 text-center">
+        <p class="stat-label text-xs font-bold uppercase tracking-widest mb-1">Best</p>
+        <p class="stat-value text-2xl font-black" style="color:#e8a020;">{{ p.best_trophies ?? '—' }}</p>
+      </div>
+
+      <div class="stat-box rounded-xl p-4 text-center">
+        <p class="stat-label text-xs font-bold uppercase tracking-widest mb-1">Wins</p>
+        <p class="stat-value text-2xl font-black" style="color:#40c080;">{{ p.wins ?? '—' }}</p>
+      </div>
+
+      <div class="stat-box rounded-xl p-4 text-center">
+        <p class="stat-label text-xs font-bold uppercase tracking-widest mb-1">Losses</p>
+        <p class="stat-value text-2xl font-black" style="color:#c06040;">{{ p.losses ?? '—' }}</p>
+      </div>
+
+    </div>
+
+    <!-- ── WIN RATE ──────────────────────────────────── -->
+    @if (p.wins !== null && p.losses !== null && (p.wins + p.losses) > 0) {
+    <div class="section-card rounded-2xl p-5 mb-6">
+      <p class="section-title font-bold uppercase mb-3">📊 Win Rate</p>
+      <div class="flex items-center gap-4">
+        <div class="flex-1 h-3 rounded-full overflow-hidden" style="background:#1c3a6a;">
+          <div class="h-full rounded-full transition-all" [style.width.%]="winRate(p)"
+            [style.background]="winRate(p) >= 50 ? '#40c080' : '#c06040'">
+          </div>
+        </div>
+        <span class="font-black text-lg" [style.color]="winRate(p) >= 50 ? '#40c080' : '#c06040'">
+          {{ winRate(p) | number:'1.1-1' }}%
+        </span>
+      </div>
+      <p class="text-xs mt-2" style="color:#4a6a9c;">
+        {{ p.wins }} W / {{ p.losses }} L
+        @if (p.battle_count) { · {{ p.battle_count }} total battles }
+      </p>
+    </div>
+    }
+
+    <!-- ── CURRENT DECK ───────────────────────────────── -->
+    @if (p.current_deck && p.current_deck.length > 0) {
+    <div class="section-card rounded-2xl p-5">
+      <p class="section-title font-bold uppercase mb-4">🃏 Current Deck</p>
+      <div class="grid grid-cols-4 sm:grid-cols-8 gap-3">
+        @for (card of p.current_deck; track card.name) {
+        <div class="deck-card">
+          @if (card.icon_url) {
+          <img [src]="card.icon_url" [alt]="card.name" />
+          } @else {
+          <div class="w-14 h-14 rounded-lg flex items-center justify-center text-2xl"
+            style="background:#091628; border:1px solid #1c3a6a;">🃏</div>
+          }
+          <span class="card-name">{{ card.name }}</span>
+          <div class="flex gap-1 items-center">
+            @if (card.elixir_cost !== null) {
+            <span class="elixir-pill">⬡ {{ card.elixir_cost }}</span>
+            }
+            @if (card.level !== null) {
+            <span class="level-badge">Lv{{ card.level }}</span>
+            }
+          </div>
+        </div>
+        }
+      </div>
+
+      <!-- Average elixir -->
+      @if (avgElixir(p) > 0) {
+      <p class="text-xs mt-4 text-right font-bold" style="color:#4a6a9c;">
+        Avg elixir: <span style="color:#b030e0;">{{ avgElixir(p) | number:'1.1-1' }}</span>
+      </p>
+      }
+    </div>
+    }
+
+    }<!-- end @if player() -->
+  </div>
+</div>

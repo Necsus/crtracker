@@ -202,6 +202,64 @@ class BattleListResponse(BaseModel):
 
 
 # =============================================================================
+# PLAYER SCHEMAS
+# =============================================================================
+
+
+class PlayerCardItem(BaseModel):
+    """A card as returned by the CR API inside a player's currentDeck."""
+
+    id: int | None = None
+    name: str
+    elixir_cost: int | None = None
+    rarity: str | None = None
+    level: int | None = None
+    icon_url: str | None = None
+
+
+class PlayerResponse(BaseModel):
+    """Full player profile as stored in the players table."""
+
+    tag: str
+    name: str | None = None
+    trophies: int | None = None
+    best_trophies: int | None = None
+    exp_level: int | None = None
+    wins: int | None = None
+    losses: int | None = None
+    battle_count: int | None = None
+    league_number: int | None = None
+    league_rank: int | None = None
+    season: str | None = None
+    current_deck: list[PlayerCardItem] = Field(default_factory=list)
+
+    model_config = {"from_attributes": True}
+
+
+class PlayerListItem(BaseModel):
+    """Lightweight player representation for leaderboard list views."""
+
+    tag: str
+    name: str | None = None
+    trophies: int | None = None
+    best_trophies: int | None = None
+    league_number: int | None = None
+    league_rank: int | None = None
+    season: str | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class PlayerListResponse(BaseModel):
+    """Paginated list of players."""
+
+    items: list[PlayerListItem]
+    total: int
+    offset: int
+    limit: int
+
+
+# =============================================================================
 # ORACLE SCHEMAS
 # =============================================================================
 

@@ -1,0 +1,122 @@
+<!-- Players Leaderboard — Clash Royale Theme -->
+<div class="min-h-screen font-cr py-8 px-4">
+  <div class="max-w-5xl mx-auto">
+
+    <!-- ══ HERO HEADER ══ -->
+    <div class="text-center mb-8">
+      <h2 class="text-4xl font-black tracking-wide mb-2">
+        <span class="cr-title-gradient">🏆 Top Players</span>
+      </h2>
+      <p class="text-sm font-bold tracking-widest uppercase" style="color: #4a6a9c;">
+        Path of Legend Leaderboard · {{ total() | number }} players synced
+      </p>
+    </div>
+
+    <!-- ══ SEASON FILTER ══ -->
+    @if (availableSeasons().length > 1) {
+    <div class="flex flex-wrap justify-center gap-2 mb-6">
+      <button (click)="setSeason(null)" [class.filter-active]="seasonFilter() === null"
+        class="filter-pill px-3 py-1.5 rounded-xl text-xs font-bold transition-all">
+        📅 All seasons
+      </button>
+      @for (s of availableSeasons(); track s) {
+      <button (click)="setSeason(s)" [class.filter-active]="seasonFilter() === s"
+        class="filter-pill px-3 py-1.5 rounded-xl text-xs font-bold transition-all">
+        {{ s }}
+      </button>
+      }
+    </div>
+    }
+
+    <!-- ══ LOADING ══ -->
+    @if (loading()) {
+    <div class="flex justify-center py-24">
+      <app-loading-spinner />
+    </div>
+    }
+
+    <!-- ══ ERROR ══ -->
+    @if (error()) {
+    <div class="text-center py-20">
+      <p class="text-4xl mb-3">⚠️</p>
+      <p class="text-sm font-bold" style="color:#c06040">{{ error() }}</p>
+    </div>
+    }
+
+    <!-- ══ PLAYERS LIST ══ -->
+    @if (!loading() && !error()) {
+
+    <!-- Table header (hidden on mobile) -->
+    <div
+      class="hidden sm:grid grid-cols-[56px_1fr_140px_120px_90px] gap-3 px-4 mb-2 text-xs font-bold uppercase tracking-widest"
+      style="color:#2a4a7a">
+      <span class="text-right">#</span>
+      <span>Player</span>
+      <span class="text-right">Trophies</span>
+      <span class="text-right">Best</span>
+      <span class="text-center">Season</span>
+    </div>
+
+    <div class="flex flex-col gap-2">
+      @for (player of players(); track player.tag) {
+
+      <a [routerLink]="['/players', player.tag]"
+        class="player-row rounded-2xl px-4 py-3 grid grid-cols-[48px_1fr] sm:grid-cols-[56px_1fr_140px_120px_90px] gap-3 items-center no-underline">
+
+        <!-- Rank -->
+        <span class="rank-number text-right" [class.rank-top3]="(player.league_rank ?? 99) <= 3">
+          {{ rankEmoji(player.league_rank) }}
+        </span>
+
+        <!-- Name / tag -->
+        <div>
+          <p class="player-name-link text-sm">{{ player.name ?? player.tag }}</p>
+          <p class="player-tag">#{{ player.tag }}</p>
+        </div>
+
+        <!-- Trophies -->
+        <div class="hidden sm:block text-right">
+          <span class="trophy-value text-base">{{ player.trophies ?? '—' }}</span>
+          <span class="ml-1 text-sm">🏆</span>
+        </div>
+
+        <!-- Best trophies -->
+        <div class="hidden sm:block text-right">
+          <span class="best-trophy-value">{{ player.best_trophies ?? '—' }} 🏆</span>
+        </div>
+
+        <!-- Season -->
+        <div class="hidden sm:block text-center">
+          @if (player.season) {
+          <span class="text-xs font-bold px-2 py-0.5 rounded-lg" style="background:#1c3a6a;color:#7ba8d0">
+            {{ player.season }}
+          </span>
+          }
+        </div>
+
+      </a>
+
+      }
+    </div>
+
+    <!-- ══ PAGINATION ══ -->
+    @if (total() > limit) {
+    <div class="flex items-center justify-center gap-4 mt-8">
+      <button (click)="prevPage()" [disabled]="!hasPrev()"
+        class="page-btn px-4 py-2 rounded-xl text-sm font-bold transition-all" [class.page-btn-disabled]="!hasPrev()">
+        ← Prev
+      </button>
+      <span class="text-sm font-bold" style="color:#4a6a9c">
+        Page {{ currentPage() }} / {{ totalPages() }}
+      </span>
+      <button (click)="nextPage()" [disabled]="!hasNext()"
+        class="page-btn px-4 py-2 rounded-xl text-sm font-bold transition-all" [class.page-btn-disabled]="!hasNext()">
+        Next →
+      </button>
+    </div>
+    }
+
+    }<!-- end @if !loading -->
+
+  </div>
+</div>

@@ -13,7 +13,9 @@ import type {
   Deck,
   DeckListItem,
   DeckStats,
-  PlayerImportResponse
+  PlayerImportResponse,
+  PlayerListResponse,
+  PlayerProfile,
 } from '../01_models/deck.model';
 import { buildUrl } from './api.interceptor';
 
@@ -130,5 +132,32 @@ export class DeckDal {
    */
   listBattleTypes(): Observable<string[]> {
     return this.http.get<string[]>(`${this.basePath}/battles/types`);
+  }
+
+  /* ============================================
+     PLAYERS
+     ============================================ */
+
+  /**
+   * Get leaderboard list of players (paginated, ordered by league_rank)
+   */
+  listPlayers(params: { season?: string; offset?: number; limit?: number } = {}): Observable<PlayerListResponse> {
+    const url = buildUrl(`${this.basePath}/players`, params);
+    return this.http.get<PlayerListResponse>(url);
+  }
+
+  /**
+   * Get available seasons stored in the players table
+   */
+  listPlayerSeasons(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.basePath}/players/seasons`);
+  }
+
+  /**
+   * Get full player profile by battle tag (with or without leading #)
+   */
+  getPlayer(tag: string): Observable<PlayerProfile> {
+    const encoded = encodeURIComponent(tag.replace(/^#/, ''));
+    return this.http.get<PlayerProfile>(`${this.basePath}/players/${encoded}`);
   }
 }

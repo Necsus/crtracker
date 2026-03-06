@@ -5,6 +5,7 @@
 
 import { DatePipe, DecimalPipe, NgClass } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 import { DeckDal } from '../00_dal/deck.dal';
 import type { Battle } from '../01_models/deck.model';
@@ -26,7 +27,7 @@ const TYPE_META: Record<string, { label: string; emoji: string; color: string }>
 @Component({
   selector: 'app-battles-log',
   standalone: true,
-  imports: [NgClass, DatePipe, LoadingSpinnerComponent, DecimalPipe],
+  imports: [NgClass, DatePipe, LoadingSpinnerComponent, DecimalPipe, RouterLink],
   templateUrl: './battles-log.component.html',
   styleUrl: './battles-log.component.scss',
 })
