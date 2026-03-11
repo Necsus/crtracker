@@ -1,14 +1,16 @@
-<!-- Loading Spinner Component -->
-<div class="loading-spinner" [class]="'loading-spinner--' + size()" [class.loading-spinner--overlay]="overlay()">
+<!-- Loading Spinner -->
+<div class="flex flex-col items-center justify-center gap-4 p-6" [class.fixed]="overlay()" [class.inset-0]="overlay()"
+  [class.backdrop-blur-md]="overlay()" [style.background]="overlay() ? 'rgba(6,14,26,0.82)' : ''"
+  [style.z-index]="overlay() ? '9999' : ''">
 
-  <div class="spinner">
-    <div class="spinner__ring"></div>
-    <div class="spinner__ring"></div>
-    <div class="spinner__ring"></div>
+  <div class="spinner relative" [ngClass]="spinnerSizeClass()">
+    <div class="spinner-ring"></div>
+    <div class="spinner-ring"></div>
+    <div class="spinner-ring"></div>
   </div>
 
   @if (message()) {
-  <p class="loading-spinner__message">{{ message() }}</p>
+  <p class="text-xs font-bold tracking-widest text-[#4a6a8c] text-center">{{ message() }}</p>
   }
 
 </div>

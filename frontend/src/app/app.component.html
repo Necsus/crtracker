@@ -1,19 +1,18 @@
-<!-- Root App — Clash Royale Theme -->
-<div class="app-root min-h-screen flex flex-col font-cr"
-  style="background: linear-gradient(180deg, #080f1c 0%, #060e1a 100%);">
+<!-- Root App -->
+<div class="min-h-screen flex flex-col font-cr bg-gradient-to-b from-[#080f1c] to-[#060e1a]">
 
   <!-- Ambient arena background -->
   <div class="arena-bg" aria-hidden="true"></div>
 
-  <!-- ══ HEADER ══ -->
+  <!-- HEADER -->
   <app-header />
 
-  <!-- ══ MAIN ══ -->
+  <!-- MAIN -->
   <main class="flex-1 relative z-10">
     <router-outlet />
   </main>
 
-  <!-- ══ FOOTER ══ -->
+  <!-- FOOTER -->
   <app-footer />
 
 </div>

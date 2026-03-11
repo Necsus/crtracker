@@ -24,6 +24,7 @@ export interface DeckListItem {
   archetype: string;
   avg_elixir: number;
   card_count: number;
+  cards: Card[];
 }
 
 /**
@@ -43,6 +44,8 @@ export interface MatchupStats {
   opponent_deck_name: string;
   opponent_archetype: string;
   winrate: number;
+  wins: number;
+  losses: number;
   sample_size: number;
   top_1000_winrate: number;
   last_updated: string;
@@ -55,7 +58,51 @@ export interface DeckStats {
   deck: Deck;
   matchups: MatchupStats[];
   global_winrate: number;
+  wins: number;
+  losses: number;
   meta_share: number;
+}
+
+/* ============================================
+   BATTLE LOG MODELS
+   ============================================ */
+
+export interface BattleCard {
+  id: number;
+  name: string;
+  elixir_cost: number | null;
+  rarity: string | null;
+  level: number | null;
+  icon_url: string | null;
+}
+
+export interface Battle {
+  id: number;
+  battle_key: string;
+  battle_time: string;
+  battle_type: string | null;
+  game_mode_name: string | null;
+  arena_name: string | null;
+  team1_tag: string;
+  team1_name: string | null;
+  team1_crowns: number | null;
+  team1_starting_trophies: number | null;
+  team1_trophy_change: number | null;
+  team1_cards: BattleCard[];
+  team2_tag: string;
+  team2_name: string | null;
+  team2_crowns: number | null;
+  team2_starting_trophies: number | null;
+  team2_trophy_change: number | null;
+  team2_cards: BattleCard[];
+  winner_tag: string | null;
+}
+
+export interface BattleListResponse {
+  items: Battle[];
+  total: number;
+  offset: number;
+  limit: number;
 }
 
 /**
@@ -128,27 +175,67 @@ export interface OracleRequest {
    ============================================ */
 
 /**
- * Clash Royale player profile
+ * A single card inside a player's current deck (from /api/v1/players/:tag)
  */
-export interface PlayerProfile {
-  tag: string;
+export interface PlayerCardItem {
+  id: number | null;
   name: string;
-  trophies: number;
-  best_trophies: number;
-  arena: string;
-  wins: number;
-  losses: number;
-  current_deck?: Card[];
+  elixir_cost: number | null;
+  rarity: string | null;
+  level: number | null;
+  icon_url: string | null;
 }
 
 /**
- * Response after importing a player deck
+ * Full player profile returned by GET /api/v1/players/:tag
+ */
+export interface PlayerProfile {
+  tag: string;
+  name: string | null;
+  trophies: number | null;
+  best_trophies: number | null;
+  exp_level: number | null;
+  wins: number | null;
+  losses: number | null;
+  battle_count: number | null;
+  league_number: number | null;
+  league_rank: number | null;
+  season: string | null;
+  current_deck: PlayerCardItem[];
+}
+
+/**
+ * Lightweight player entry for leaderboard list views
+ */
+export interface PlayerListItem {
+  tag: string;
+  name: string | null;
+  trophies: number | null;
+  best_trophies: number | null;
+  league_number: number | null;
+  league_rank: number | null;
+  season: string | null;
+}
+
+/**
+ * Paginated list of players returned by GET /api/v1/players
+ */
+export interface PlayerListResponse {
+  items: PlayerListItem[];
+  total: number;
+  offset: number;
+  limit: number;
+}
+
+/**
+ * Response after importing a player deck (legacy, kept for compatibility)
  */
 export interface PlayerImportResponse {
   player: PlayerProfile;
   deck?: Deck;
   message: string;
 }
+
 
 /* ============================================
    API RESPONSE WRAPPERS

@@ -149,6 +149,23 @@ class DeckDAL(BaseDAL[Deck]):
         matchups = deck.matchup_stats.get("matchups", {})
         return matchups.get(str(opponent_deck_id))
 
+    async def get_by_deck_keys(self, deck_keys: list[str]) -> list[Deck]:
+        """Get decks by their stored deck_key values in matchup_stats.
+
+        Args:
+            deck_keys: List of SHA1 deck key strings (as stored by sync_top1000)
+
+        Returns:
+            List of matching Deck rows
+        """
+        if not deck_keys:
+            return []
+        stmt = select(Deck).where(
+            Deck.matchup_stats["deck_key"].as_string().in_(deck_keys)
+        )
+        result: Result = await self.session.execute(stmt)
+        return list(result.scalars().all())
+
     async def update_matchup_cache(
         self,
         deck_id: int,

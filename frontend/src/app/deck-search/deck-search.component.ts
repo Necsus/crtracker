@@ -1,50 +1,31 @@
 /* ============================================
    DECK SEARCH FEATURE COMPONENT
-   Search interface and deck statistics dashboard
+   Search interface — navigates to /decks/:id for full detail
    ============================================ */
 
-import { Component, inject, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 
 import { DeckService } from '../10_bll/deck.service';
-import { DeckDisplayComponent } from '../shared/components/deck-display/deck-display.component';
-import { MatchupCardComponent } from '../shared/components/matchup-card/matchup-card.component';
+import { CardIconComponent } from '../shared/components/card-icon/card-icon.component';
 import { LoadingSpinnerComponent } from '../shared/components/loading-spinner/loading-spinner.component';
-import { WinrateBadgeComponent } from '../shared/components/winrate-badge/winrate-badge.component';
 
 /** Regex for valid Clash Royale player tag */
 const PLAYER_TAG_REGEX = /^#?[0289PYLQGRJCUV]{3,12}$/i;
 
-/**
- * Deck Search Component - Smart component
- *
- * Features:
- * - Search decks by archetype or name (debounced)
- * - Import deck by player tag (validated)
- * - Display deck statistics and matchups
- * - Navigate to Oracle detail view
- */
 @Component({
   selector: 'app-deck-search',
   standalone: true,
-  imports: [
-    DeckDisplayComponent,
-    MatchupCardComponent,
-    LoadingSpinnerComponent,
-    WinrateBadgeComponent,
-  ],
+  imports: [LoadingSpinnerComponent, CardIconComponent],
   templateUrl: './deck-search.component.html',
-  styleUrl: './deck-search.component.scss',
 })
 export class DeckSearchComponent implements OnInit, OnDestroy {
   private readonly deckService = inject(DeckService);
   private readonly router = inject(Router);
   private readonly destroy$ = new Subject<void>();
   private readonly searchSubject$ = new Subject<string>();
-
-  @ViewChild('deckDetailsSection') deckDetailsSection?: ElementRef<HTMLElement>;
 
   /* ============================================
      SIGNALS (READ-ONLY FROM SERVICE)
@@ -54,8 +35,6 @@ export class DeckSearchComponent implements OnInit, OnDestroy {
   readonly hasError = this.deckService.hasError;
   readonly errorMessage = this.deckService.errorMessage;
   readonly filteredDecks = this.deckService.filteredDecks;
-  readonly currentDeck = this.deckService.currentDeck;
-  readonly currentDeckStats = this.deckService.currentDeckStats;
   readonly featuredDecks = this.deckService.featuredDecks;
 
   /* ============================================
@@ -66,17 +45,16 @@ export class DeckSearchComponent implements OnInit, OnDestroy {
   playerTag = '';
   playerTagError = '';
   showImportModal = false;
+  importLoading = false;
 
   /* ============================================
      LIFECYCLE
      ============================================ */
 
   ngOnInit(): void {
-    // Load initial data
     this.deckService.loadPopularDecks(8);
     this.deckService.loadDecks(0, 50);
 
-    // Setup debounced search (300ms)
     this.searchSubject$.pipe(
       debounceTime(300),
       distinctUntilChanged(),
@@ -115,29 +93,23 @@ export class DeckSearchComponent implements OnInit, OnDestroy {
       return;
     }
     this.playerTagError = '';
-    this.deckService.importPlayerDeck(tag);
-    this.showImportModal = false;
+    this.importLoading = true;
+
+    this.deckService.importPlayerDeck(tag).subscribe(response => {
+      this.importLoading = false;
+      this.showImportModal = false;
+      if (response?.deck) {
+        this.router.navigate(['/decks', response.deck.id]);
+      }
+    });
   }
 
   /* ============================================
-     DECK SELECTION
+     NAVIGATION
      ============================================ */
 
   onSelectDeck(deckId: number): void {
-    this.deckService.selectDeckWithStats(deckId);
-
-    // Scroll to deck details on mobile
-    if (window.innerWidth < 768) {
-      setTimeout(() => {
-        this.deckDetailsSection?.nativeElement.scrollIntoView({
-          behavior: 'smooth',
-        });
-      }, 100);
-    }
-  }
-
-  onViewMatchup(playerDeckId: number, opponentDeckId: number): void {
-    this.router.navigate(['/oracle', playerDeckId, opponentDeckId]);
+    this.router.navigate(['/decks', deckId]);
   }
 
   /* ============================================
@@ -146,9 +118,5 @@ export class DeckSearchComponent implements OnInit, OnDestroy {
 
   onDismissError(): void {
     this.deckService.clearError();
-  }
-
-  onClearSelection(): void {
-    this.deckService.clearSelection();
   }
 }

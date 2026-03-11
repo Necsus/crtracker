@@ -3,8 +3,8 @@
    Displays a single Clash Royale card with elixir cost
    ============================================ */
 
-import { Component, input, computed } from '@angular/core';
 import { NgClass } from '@angular/common';
+import { Component, computed, input } from '@angular/core';
 import type { Card } from '../../../01_models/deck.model';
 
 /**
@@ -20,7 +20,6 @@ import type { Card } from '../../../01_models/deck.model';
   standalone: true,
   imports: [NgClass],
   templateUrl: './card-icon.component.html',
-  styleUrl: './card-icon.component.scss',
 })
 export class CardIconComponent {
   /** Card data input (required signal input) */

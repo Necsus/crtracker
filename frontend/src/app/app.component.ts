@@ -14,7 +14,6 @@ import { HeaderComponent } from './shared/components/header/header.component';
   standalone: true,
   imports: [RouterOutlet, HeaderComponent, FooterComponent],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.scss',
 })
 export class AppComponent {
   title = 'CRTracker';

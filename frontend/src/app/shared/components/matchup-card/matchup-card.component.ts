@@ -3,9 +3,10 @@
    Displays a single matchup with winrate
    ============================================ */
 
-import { Component, input, output, computed } from '@angular/core';
-import type { MatchupStats } from '../../../01_models/deck.model';
+import { NgClass } from '@angular/common';
+import { Component, computed, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import type { MatchupStats } from '../../../01_models/deck.model';
 
 /**
  * Matchup Card Component - Dumb/presentational component
@@ -19,9 +20,8 @@ import { RouterLink } from '@angular/router';
 @Component({
   selector: 'app-matchup-card',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, NgClass],
   templateUrl: './matchup-card.component.html',
-  styleUrl: './matchup-card.component.scss',
 })
 export class MatchupCardComponent {
   /** Matchup stats input */
@@ -46,6 +46,14 @@ export class MatchupCardComponent {
     if (winrate >= 55) return 'favorable';
     if (winrate >= 47) return 'even';
     return 'unfavorable';
+  });
+
+  /** Tailwind classes for the winrate badge in this card */
+  readonly wrBadgeClasses = computed(() => {
+    const winrate = this.matchup().winrate;
+    if (winrate >= 55) return 'bg-green-500/10 border border-green-500/30 text-green-400';
+    if (winrate >= 47) return 'bg-[#f6c237]/10 border border-[#f6c237]/25 text-[#f6c237]';
+    return 'bg-red-500/10 border border-red-500/25 text-red-400';
   });
 
   /** Winrate icon */

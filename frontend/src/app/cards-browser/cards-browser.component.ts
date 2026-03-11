@@ -12,6 +12,7 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 
 import { DeckDal } from '../00_dal/deck.dal';
 import type { Card, CardApiItem } from '../01_models/deck.model';
@@ -24,9 +25,8 @@ type TypeFilter = 'all' | 'troop' | 'spell' | 'building';
 @Component({
   selector: 'app-cards-browser',
   standalone: true,
-  imports: [FormsModule, NgClass, CardIconComponent, LoadingSpinnerComponent],
+  imports: [FormsModule, NgClass, RouterLink, CardIconComponent, LoadingSpinnerComponent],
   templateUrl: './cards-browser.component.html',
-  styleUrl: './cards-browser.component.scss',
 })
 export class CardsBrowserComponent implements OnInit {
   private readonly dal = inject(DeckDal);

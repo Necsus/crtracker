@@ -9,9 +9,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
+from app.routes.battles_route import router as battles_router
 from app.routes.cards_route import router as cards_router
 from app.routes.decks_route import router as decks_router
 from app.routes.oracle_route import router as oracle_router
+from app.routes.players_route import router as players_router
 
 settings = get_settings()
 
@@ -91,9 +93,11 @@ def create_app() -> FastAPI:
     # ROUTE REGISTRATION
     # ==========================================================================
 
+    app.include_router(battles_router)
     app.include_router(cards_router)
     app.include_router(decks_router)
     app.include_router(oracle_router)
+    app.include_router(players_router)
 
     # ==========================================================================
     # HEALTH CHECK

@@ -1,26 +1,42 @@
-<!-- Matchup Card — CR Style -->
-<a [routerLink]="oracleLink()" class="matchup-card" (click)="clicked.emit(matchup().opponent_deck_id)"
-  [attr.aria-label]="'View matchup vs ' + matchup().opponent_deck_name">
+<!-- Matchup Card -->
+<a [routerLink]="oracleLink()" (click)="clicked.emit(matchup().opponent_deck_id)"
+  [attr.aria-label]="'View matchup vs ' + matchup().opponent_deck_name" class="flex items-center gap-3 px-3.5 py-2.5 rounded-lg no-underline cursor-pointer
+         bg-[#0a162c]/60 border border-white/[.06] transition-all
+         hover:bg-[#142a50]/70 hover:border-[#f6c237]/25">
 
   <!-- Opponent info -->
   <div class="min-w-0 flex-1">
-    <h4 class="matchup-card__name">{{ matchup().opponent_deck_name }}</h4>
-    <span class="matchup-card__archetype">{{ matchup().opponent_archetype }}</span>
+    <h4 class="font-bold text-[0.85rem] text-[#d8e8ff] leading-snug mb-0.5 truncate">{{ matchup().opponent_deck_name }}
+    </h4>
+    <span class="text-[0.65rem] font-semibold uppercase tracking-widest text-[#7b96aa]">{{ matchup().opponent_archetype
+      }}</span>
   </div>
 
-  <!-- Winrate -->
-  <div class="matchup-card__wr" [class]="'matchup-card__wr--' + winrateClass()">
-    <span class="matchup-card__wr-icon">{{ winrateIcon() }}</span>
-    <span class="matchup-card__wr-val">{{ matchup().winrate.toFixed(1) }}%</span>
+  <!-- Winrate badge -->
+  <div
+    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full font-extrabold text-[0.8rem] whitespace-nowrap flex-shrink-0"
+    [ngClass]="wrBadgeClasses()">
+    <span class="text-[0.7em]">{{ winrateIcon() }}</span>
+    <span style="line-height:1">{{ matchup().winrate.toFixed(1) }}%</span>
   </div>
 
-  <!-- Details -->
+  <!-- Top 1k / sample / W-L -->
   @if (showDetails()) {
-  <div class="matchup-card__meta">
-    <span>Top&nbsp;1k:</span>
-    <span class="font-bold">{{ matchup().top_1000_winrate.toFixed(1) }}%</span>
-    <span class="opacity-30">•</span>
-    <span>{{ formatSampleSize(matchup().sample_size) }}</span>
+  <div
+    class="flex flex-col items-end gap-0.5 text-[0.65rem] font-semibold text-[#4a6a8c] whitespace-nowrap flex-shrink-0">
+    <div class="flex items-center gap-1.5">
+      <span>Top&nbsp;1k:</span>
+      <span class="font-bold">{{ matchup().top_1000_winrate.toFixed(1) }}%</span>
+      <span class="opacity-30">&bull;</span>
+      <span>{{ formatSampleSize(matchup().sample_size) }}</span>
+    </div>
+    @if (matchup().wins > 0 || matchup().losses > 0) {
+    <div class="flex items-center gap-1">
+      <span class="text-[#40d070] font-bold">{{ matchup().wins }}W</span>
+      <span class="opacity-30">&bull;</span>
+      <span class="text-[#d04040] font-bold">{{ matchup().losses }}L</span>
+    </div>
+    }
   </div>
   }
 

@@ -99,3 +99,23 @@ async def list_cards(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to retrieve cards: {str(e)}",
         ) from e
+
+
+@router.get(
+    "/cards/{card_id}",
+    response_model=CardResponse,
+    summary="Get card by CR API id",
+    description="Retrieve a single card by its Clash Royale numeric ID.",
+)
+async def get_card(
+    card_id: int,
+    card_dal: Annotated[CardDAL, Depends(get_card_dal)],
+) -> CardResponse:
+    """Return a single card or 404."""
+    card = await card_dal.get_by_card_id(card_id)
+    if card is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Card {card_id} not found",
+        )
+    return _to_response(card)

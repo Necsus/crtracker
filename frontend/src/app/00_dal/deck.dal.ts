@@ -8,11 +8,14 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import type {
+  BattleListResponse,
   CardApiItem,
   Deck,
   DeckListItem,
   DeckStats,
   PlayerImportResponse,
+  PlayerListResponse,
+  PlayerProfile,
 } from '../01_models/deck.model';
 import { buildUrl } from './api.interceptor';
 
@@ -99,5 +102,70 @@ export class DeckDal {
   } = {}): Observable<CardApiItem[]> {
     const url = buildUrl(`${this.basePath}/cards`, params);
     return this.http.get<CardApiItem[]>(url);
+  }
+
+  /**
+   * Get full details for a single card by its CR numeric ID
+   */
+  getCard(cardId: string): Observable<CardApiItem> {
+    return this.http.get<CardApiItem>(`${this.basePath}/cards/${cardId}`);
+  }
+
+  /* ============================================
+     BATTLES
+     ============================================ */
+
+  /**
+   * List battles with optional type filter and pagination
+   */
+  listBattles(params: {
+    battle_type?: string;
+    offset?: number;
+    limit?: number;
+  } = {}): Observable<BattleListResponse> {
+    const url = buildUrl(`${this.basePath}/battles`, params);
+    return this.http.get<BattleListResponse>(url);
+  }
+
+  /**
+   * List battles where the given deck was used by either team
+   */
+  listBattlesByDeck(deckId: number, offset = 0, limit = 20): Observable<BattleListResponse> {
+    const url = buildUrl(`${this.basePath}/battles`, { deck_id: deckId, offset, limit });
+    return this.http.get<BattleListResponse>(url);
+  }
+
+  /**
+   * List all available battle types
+   */
+  listBattleTypes(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.basePath}/battles/types`);
+  }
+
+  /* ============================================
+     PLAYERS
+     ============================================ */
+
+  /**
+   * Get leaderboard list of players (paginated, ordered by league_rank)
+   */
+  listPlayers(params: { season?: string; offset?: number; limit?: number } = {}): Observable<PlayerListResponse> {
+    const url = buildUrl(`${this.basePath}/players`, params);
+    return this.http.get<PlayerListResponse>(url);
+  }
+
+  /**
+   * Get available seasons stored in the players table
+   */
+  listPlayerSeasons(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.basePath}/players/seasons`);
+  }
+
+  /**
+   * Get full player profile by battle tag (with or without leading #)
+   */
+  getPlayer(tag: string): Observable<PlayerProfile> {
+    const encoded = encodeURIComponent(tag.replace(/^#/, ''));
+    return this.http.get<PlayerProfile>(`${this.basePath}/players/${encoded}`);
   }
 }

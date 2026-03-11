@@ -3,10 +3,10 @@
    Comprehensive tactical advice for a matchup
    ============================================ */
 
-import { Component, inject, OnInit, input } from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router';
+import { NgClass } from '@angular/common';
+import { Component, inject, input, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 
-import type { OracleAdvice } from '../01_models/deck.model';
 import { OracleService } from '../10_bll/oracle.service';
 import { DeckDisplayComponent } from '../shared/components/deck-display/deck-display.component';
 import { LoadingSpinnerComponent } from '../shared/components/loading-spinner/loading-spinner.component';
@@ -26,12 +26,12 @@ import { WinrateBadgeComponent } from '../shared/components/winrate-badge/winrat
   selector: 'app-oracle-detail',
   standalone: true,
   imports: [
+    NgClass,
     DeckDisplayComponent,
     LoadingSpinnerComponent,
     WinrateBadgeComponent,
   ],
   templateUrl: './oracle-detail.component.html',
-  styleUrl: './oracle-detail.component.scss',
 })
 export class OracleDetailComponent implements OnInit {
   private readonly router = inject(Router);
@@ -95,6 +95,23 @@ export class OracleDetailComponent implements OnInit {
   /* ============================================
      HELPERS
      ============================================ */
+
+  getPriorityBorderClass(priority: string): string {
+    switch (priority) {
+      case 'critical': return 'border-l-[3px] border-red-500/60';
+      case 'high': return 'border-l-[3px] border-orange-400/60';
+      case 'medium': return 'border-l-[3px] border-yellow-400/60';
+      default: return 'border-l-[3px] border-blue-400/40';
+    }
+  }
+
+  getDifficultyClass(difficulty: string): string {
+    switch (difficulty) {
+      case 'easy': return 'bg-green-500/15 border border-green-500/40 text-green-400';
+      case 'hard': return 'bg-red-500/15 border border-red-500/40 text-red-400';
+      default: return 'bg-yellow-400/15 border border-yellow-400/40 text-yellow-300';
+    }
+  }
 
   getPriorityIcon(priority: string): string {
     const icons = {

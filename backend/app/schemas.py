@@ -24,8 +24,8 @@ class Card(BaseModel):
     rarity: Literal["common", "rare", "epic", "legendary", "champion"] = Field(
         ..., description="Card rarity"
     )
-    type: Literal["troop", "spell", "building"] = Field(
-        ..., description="Card type"
+    type: Literal["troop", "spell", "building"] | None = Field(
+        None, description="Card type"
     )
     icon_url: str | None = Field(None, description="URL to card icon image")
 
@@ -98,6 +98,7 @@ class DeckListItem(BaseModel):
     archetype: str
     avg_elixir: float
     card_count: int = Field(..., description="Always 8")
+    cards: list[Card] = Field(default_factory=list, description="8 cards in the deck")
 
 
 # =============================================================================
@@ -114,6 +115,8 @@ class MatchupStats(BaseModel):
     winrate: float = Field(
         ..., ge=0, le=100, description="Win percentage (0-100)"
     )
+    wins: int = Field(0, ge=0, description="Number of wins in this matchup")
+    losses: int = Field(0, ge=0, description="Number of losses in this matchup")
     sample_size: int = Field(
         ..., ge=0, description="Number of recorded matches"
     )
@@ -139,12 +142,181 @@ class DeckStatsResponse(BaseModel):
         le=100,
         description="Overall winrate across all matchups",
     )
+    wins: int = Field(0, ge=0, description="Total wins")
+    losses: int = Field(0, ge=0, description="Total losses")
     meta_share: float = Field(
         ...,
         ge=0,
         le=100,
         description="Meta usage percentage",
     )
+
+
+# =============================================================================
+# BATTLE SCHEMAS
+# =============================================================================
+
+
+class BattleCardItem(BaseModel):
+    """A single card as stored in a battle log."""
+
+    id: int = Field(..., description="CR numeric card ID")
+    name: str
+    elixir_cost: int | None = None
+    rarity: str | None = None
+    level: int | None = None
+    icon_url: str | None = None
+
+
+class BattleResponse(BaseModel):
+    """A single battle from the battles table."""
+
+    id: int
+    battle_key: str
+    battle_time: datetime
+    battle_type: str | None = None
+    game_mode_name: str | None = None
+    arena_name: str | None = None
+
+    team1_tag: str
+    team1_name: str | None = None
+    team1_crowns: int | None = None
+    team1_starting_trophies: int | None = None
+    team1_trophy_change: int | None = None
+    team1_cards: list[BattleCardItem] = Field(default_factory=list)
+
+    team2_tag: str
+    team2_name: str | None = None
+    team2_crowns: int | None = None
+    team2_starting_trophies: int | None = None
+    team2_trophy_change: int | None = None
+    team2_cards: list[BattleCardItem] = Field(default_factory=list)
+
+    winner_tag: str | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class BattleListResponse(BaseModel):
+    """Paginated list of battles."""
+
+    items: list[BattleResponse]
+    total: int
+    offset: int
+    limit: int
+
+
+# =============================================================================
+# PLAYER SCHEMAS
+# =============================================================================
+
+
+class PlayerCardItem(BaseModel):
+    """A card as returned by the CR API inside a player's currentDeck."""
+
+    id: int | None = None
+    name: str
+    elixir_cost: int | None = None
+    rarity: str | None = None
+    level: int | None = None
+    icon_url: str | None = None
+
+
+class PlayerResponse(BaseModel):
+    """Full player profile as stored in the players table."""
+
+    tag: str
+    name: str | None = None
+    trophies: int | None = None
+    best_trophies: int | None = None
+    exp_level: int | None = None
+    wins: int | None = None
+    losses: int | None = None
+    battle_count: int | None = None
+    league_number: int | None = None
+    league_rank: int | None = None
+    season: str | None = None
+    current_deck: list[PlayerCardItem] = Field(default_factory=list)
+
+    model_config = {"from_attributes": True}
+
+
+class PlayerListItem(BaseModel):
+    """Lightweight player representation for leaderboard list views."""
+
+    tag: str
+    name: str | None = None
+    trophies: int | None = None
+    best_trophies: int | None = None
+    league_number: int | None = None
+    league_rank: int | None = None
+    season: str | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class PlayerListResponse(BaseModel):
+    """Paginated list of players."""
+
+    items: list[PlayerListItem]
+    total: int
+    offset: int
+    limit: int
+
+
+# =============================================================================
+# SEASON SCHEMAS
+# =============================================================================
+
+
+class SeasonResponse(BaseModel):
+    """A Clash Royale season with its exact time boundaries."""
+
+    id: int
+    name: str = Field(..., description="Label e.g. '2026-03'")
+    start_at: datetime = Field(..., description="Exact season start (tz-aware)")
+    end_at: datetime | None = Field(None, description="Exact season end, NULL if active")
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class SeasonCreate(BaseModel):
+    """Payload to create a new season."""
+
+    name: str = Field(..., min_length=4, max_length=10, description="Label e.g. '2026-03'")
+    start_at: datetime = Field(..., description="Exact season start (tz-aware)")
+    end_at: datetime | None = Field(None, description="Exact season end, NULL if active")
+
+
+class PlayerSeasonRankResponse(BaseModel):
+    """Rank of a player for a specific season."""
+
+    id: int
+    player_id: int
+    season_id: int
+    league_rank: int | None = None
+    league_number: int | None = None
+    trophies: int | None = None
+    synced_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class PlayerSeasonRankWithSeason(PlayerSeasonRankResponse):
+    """Rank entry enriched with its season metadata."""
+
+    season: SeasonResponse
+
+
+class SeasonLeaderboard(BaseModel):
+    """Paginated leaderboard for a specific season."""
+
+    season: SeasonResponse
+    items: list[PlayerSeasonRankResponse]
+    total: int
+    offset: int
+    limit: int
 
 
 # =============================================================================
