@@ -128,6 +128,14 @@ export class DeckDal {
   }
 
   /**
+   * List battles where the given deck was used by either team
+   */
+  listBattlesByDeck(deckId: number, offset = 0, limit = 20): Observable<BattleListResponse> {
+    const url = buildUrl(`${this.basePath}/battles`, { deck_id: deckId, offset, limit });
+    return this.http.get<BattleListResponse>(url);
+  }
+
+  /**
    * List all available battle types
    */
   listBattleTypes(): Observable<string[]> {

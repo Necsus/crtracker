@@ -29,6 +29,42 @@ class DeckService:
     between ORM models and API schemas.
     """
 
+    @staticmethod
+    def _extract_cards(raw: Any) -> list[dict]:
+        """Normalize cards from either storage format into a clean list.
+
+        Supported formats:
+        - Plain list: [{"id": ..., "elixir": ..., "rarity": "Rare", ...}, ...]
+        - Dict wrapper (seed data): {"cards": [...]}
+
+        Rarity is lowercased to satisfy the Pydantic Literal constraint.
+        Cards with missing required fields are silently dropped.
+        """
+        if isinstance(raw, dict):
+            raw = raw.get("cards", [])
+        if not isinstance(raw, list):
+            return []
+
+        result = []
+        for c in raw:
+            if not isinstance(c, dict):
+                continue
+            card_id = c.get("id")
+            name = c.get("name")
+            elixir = c.get("elixir") if c.get("elixir") is not None else c.get("elixirCost")
+            rarity = c.get("rarity")
+            if card_id is None or name is None or elixir is None or rarity is None:
+                continue
+            result.append({
+                "id": str(card_id),
+                "name": name,
+                "elixir": int(elixir),
+                "rarity": str(rarity).lower(),
+                "type": c.get("type"),
+                "icon_url": c.get("icon_url") or c.get("iconUrls", {}).get("medium") if isinstance(c.get("iconUrls"), dict) else c.get("icon_url"),
+            })
+        return result
+
     def __init__(self, session: AsyncSession) -> None:
         """Initialize the deck service.
 
@@ -80,7 +116,8 @@ class DeckService:
                 name=deck.name,
                 archetype=deck.archetype,
                 avg_elixir=deck.avg_elixir,
-                card_count=8,  # Always 8 in CR
+                card_count=8,
+                cards=self._extract_cards(deck.cards),
             )
             for deck in decks
         ]
@@ -113,6 +150,7 @@ class DeckService:
                 archetype=deck.archetype,
                 avg_elixir=deck.avg_elixir,
                 card_count=8,
+                cards=self._extract_cards(deck.cards),
             )
             for deck in decks
         ]
@@ -137,6 +175,7 @@ class DeckService:
                 archetype=deck.archetype,
                 avg_elixir=deck.avg_elixir,
                 card_count=8,
+                cards=self._extract_cards(deck.cards),
             )
             for deck in decks
         ]
@@ -158,54 +197,94 @@ class DeckService:
         if not deck:
             return None
 
-        # Build response
+        ms = deck.matchup_stats or {}
+        seasons = ms.get("seasons", {})
+
+        if seasons:
+            # Season-scoped structure (sync_top1000): use the latest season's data.
+            latest_season = max(seasons.keys())
+            season_data = seasons[latest_season]
+            matchups_raw: dict[str, dict] = season_data.get("matchups", {})  # keys = sha1 deck_keys
+            global_winrate: float = season_data.get("global_winrate") or 50.0
+            meta_share: float = season_data.get("meta_share") or 0.0
+            wins: int = season_data.get("wins", 0)
+            losses: int = season_data.get("losses", 0)
+
+            # Batch-load opponents by deck_key
+            opp_decks_list = await self.deck_dal.get_by_deck_keys(list(matchups_raw.keys()))
+            opponent_by_key: dict[str, Deck] = {}
+            for opp in opp_decks_list:
+                opp_key = (opp.matchup_stats or {}).get("deck_key")
+                if opp_key:
+                    opponent_by_key[opp_key] = opp
+
+            matchups = self._extract_matchup_stats_by_key(matchups_raw, opponent_by_key)
+        else:
+            # Legacy structure (compute_deck_stats): matchups keyed by integer deck ID.
+            matchups_raw = ms.get("matchups", {})
+            global_winrate = ms.get("global_winrate") or 50.0
+            meta_share = ms.get("meta_share") or 0.0
+            wins = ms.get("wins", 0)
+            losses = ms.get("losses", 0)
+
+            opponent_decks: dict[int, Deck] = {}
+            for key in matchups_raw:
+                try:
+                    opp_id = int(key)
+                except ValueError:
+                    continue
+                opp = await self.deck_dal.get_by_id(opp_id)
+                if opp:
+                    opponent_decks[opp_id] = opp
+
+            matchups = self._extract_matchup_stats(deck, opponent_decks)
+
         deck_response = self._deck_to_response(deck)
-        matchups = self._extract_matchup_stats(deck)
 
         return DeckStatsResponse(
             deck=deck_response,
             matchups=matchups,
-            global_winrate=deck.global_winrate or 50.0,
-            meta_share=deck.meta_share or 0.0,
+            global_winrate=global_winrate,
+            meta_share=meta_share,
+            wins=wins,
+            losses=losses,
         )
 
-    def _extract_matchup_stats(self, deck: Deck) -> list[MatchupStats]:
+    def _extract_matchup_stats(self, deck: Deck, opponent_decks: dict[int, "Deck"]) -> list[MatchupStats]:
         """Extract and format matchup statistics from deck JSONB.
 
         Args:
             deck: Deck entity with matchup_stats
+            opponent_decks: Pre-loaded opponent Deck entities keyed by ID
 
         Returns:
-            List of matchup statistics
+            List of matchup statistics sorted by sample_size descending
         """
         matchups_data = deck.matchup_stats.get("matchups", {})
         matchups = []
 
-        # In production, we'd fetch opponent deck names from DB
-        # For MVP, we use mock data
-        mock_opponents = {
-            "2": {"name": "Hog Cycle", "archetype": "Cycle"},
-            "3": {"name": "Log Bait", "archetype": "Spell Bait"},
-            "4": {"name": "Golem Beatdown", "archetype": "Beatdown"},
-            "5": {"name": "XBow Siege", "archetype": "Siege"},
-            "6": {"name": "Graveyard Control", "archetype": "Control"},
-            "7": {"name": "Pekka Bridge Spam", "archetype": "Bridge Spam"},
-            "8": {"name": "Balloon Cycle", "archetype": "Cycle"},
-            "9": {"name": "Elite Barbs", "archetype": "Beatdown"},
-            "10": {"name": "Mortar Control", "archetype": "Siege"},
-        }
+        for opponent_id_str, stats in matchups_data.items():
+            try:
+                opponent_id = int(opponent_id_str)
+            except ValueError:
+                continue
 
-        for opponent_id, stats in matchups_data.items():
-            opponent_info = mock_opponents.get(
-                opponent_id, {"name": f"Deck {opponent_id}", "archetype": "Unknown"}
-            )
+            opp = opponent_decks.get(opponent_id)
+            if opp:
+                opp_name = opp.name
+                opp_archetype = opp.archetype
+            else:
+                opp_name = f"Deck #{opponent_id}"
+                opp_archetype = "Unknown"
 
             matchups.append(
                 MatchupStats(
-                    opponent_deck_id=int(opponent_id),
-                    opponent_deck_name=opponent_info["name"],
-                    opponent_archetype=opponent_info["archetype"],
+                    opponent_deck_id=opponent_id,
+                    opponent_deck_name=opp_name,
+                    opponent_archetype=opp_archetype,
                     winrate=stats.get("winrate", 50.0),
+                    wins=stats.get("wins", 0),
+                    losses=stats.get("losses", 0),
                     sample_size=stats.get("sample_size", 0),
                     top_1000_winrate=stats.get("top_1000_winrate", 50.0),
                     last_updated=datetime.fromisoformat(
@@ -214,9 +293,44 @@ class DeckService:
                 )
             )
 
-        # Sort by sample size (most played matchups first)
         matchups.sort(key=lambda m: m.sample_size, reverse=True)
+        return matchups
 
+    def _extract_matchup_stats_by_key(
+        self,
+        matchups_raw: dict[str, dict],
+        opponent_by_key: dict[str, "Deck"],
+    ) -> list[MatchupStats]:
+        """Extract matchup stats from season-scoped data (deck_key-keyed)."""
+        matchups = []
+        for dk, stats in matchups_raw.items():
+            opp = opponent_by_key.get(dk)
+            if opp:
+                opp_id = opp.id
+                opp_name = opp.name
+                opp_archetype = opp.archetype
+            else:
+                opp_id = 0
+                opp_name = f"Deck {dk[:8]}…"
+                opp_archetype = "Unknown"
+
+            matchups.append(
+                MatchupStats(
+                    opponent_deck_id=opp_id,
+                    opponent_deck_name=opp_name,
+                    opponent_archetype=opp_archetype,
+                    winrate=stats.get("winrate", 50.0),
+                    wins=stats.get("wins", 0),
+                    losses=stats.get("losses", 0),
+                    sample_size=stats.get("sample_size", 0),
+                    top_1000_winrate=stats.get("winrate", 50.0),
+                    last_updated=datetime.fromisoformat(
+                        stats.get("last_updated", datetime.now(timezone.utc).isoformat())
+                    ),
+                )
+            )
+
+        matchups.sort(key=lambda m: m.sample_size, reverse=True)
         return matchups
 
     # ==========================================================================
@@ -284,14 +398,11 @@ class DeckService:
         Returns:
             DeckResponse schema
         """
-        # Extract cards from JSONB
-        cards_data = deck.cards.get("cards", [])
-
         return DeckResponse(
             id=deck.id,
             name=deck.name,
             archetype=deck.archetype,
-            cards=cards_data,  # Already in correct format
+            cards=self._extract_cards(deck.cards),
             avg_elixir=deck.avg_elixir,
             created_at=deck.created_at,
             updated_at=deck.updated_at,

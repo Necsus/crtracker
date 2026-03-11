@@ -3,12 +3,12 @@
    State management for deck operations using Signals
    ============================================ */
 
-import { inject, Injectable, signal, computed } from '@angular/core';
-import { tap, catchError, of, switchMap } from 'rxjs';
+import { computed, inject, Injectable, signal } from '@angular/core';
+import { catchError, Observable, of, switchMap, tap } from 'rxjs';
 
-import type { Deck, DeckListItem, DeckStats, PlayerImportResponse } from '../01_models/deck.model';
-import type { LoadingState } from '../01_models/app.model';
 import { DeckDal } from '../00_dal/deck.dal';
+import type { LoadingState } from '../01_models/app.model';
+import type { Deck, DeckListItem, DeckStats, PlayerImportResponse } from '../01_models/deck.model';
 
 /**
  * Deck Service - Manages deck state and operations
@@ -211,17 +211,16 @@ export class DeckService {
 
   /**
    * Import a deck from player tag
+   * Returns an Observable so callers can react (e.g. navigate) after import.
    */
-  importPlayerDeck(playerTag: string): void {
+  importPlayerDeck(playerTag: string): Observable<PlayerImportResponse | null> {
     this.loadingState.set('loading');
     this.error.set(null);
 
-    this.deckDal.importPlayerDeck(playerTag).pipe(
+    return this.deckDal.importPlayerDeck(playerTag).pipe(
       tap(response => {
         if (response.deck) {
-          this.selectedDeck.set(response.deck);
-          // Also load stats for the imported deck
-          this.loadDeckStats(response.deck.id);
+          this.loadingState.set('success');
         } else {
           this.error.set(response.message);
           this.loadingState.set('error');
@@ -232,7 +231,7 @@ export class DeckService {
         this.error.set(err.userMessage || 'Failed to import player deck');
         return of(null);
       })
-    ).subscribe();
+    );
   }
 
   /* ============================================

@@ -38,9 +38,9 @@ const MOCK_STATS: MockCardStats = {
 };
 
 const MOCK_DECKS: DeckListItem[] = [
-  { id: 1, name: 'Classic Beatdown', archetype: 'Beatdown', avg_elixir: 3.6, card_count: 8 },
-  { id: 2, name: 'Hog Cycle', archetype: 'Cycle', avg_elixir: 2.9, card_count: 8 },
-  { id: 3, name: 'Giant Double Prince', archetype: 'Beatdown', avg_elixir: 4.0, card_count: 8 },
+  { id: 1, name: 'Classic Beatdown', archetype: 'Beatdown', avg_elixir: 3.6, card_count: 8, cards: [] },
+  { id: 2, name: 'Hog Cycle', archetype: 'Cycle', avg_elixir: 2.9, card_count: 8, cards: [] },
+  { id: 3, name: 'Giant Double Prince', archetype: 'Beatdown', avg_elixir: 4.0, card_count: 8, cards: [] },
 ];
 
 @Component({

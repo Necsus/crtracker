@@ -244,11 +244,11 @@ def _deck_name(cards: list[dict]) -> str:
 def _to_deck_cards(raw_cards: list[dict]) -> list[dict]:
     return [
         {
-            "id": c.get("id"),
+            "id": str(c["id"]) if c.get("id") is not None else None,
             "name": c.get("name"),
             "elixir": c.get("elixirCost"),
             "rarity": c.get("rarity"),
-            "type": None,
+            "type": None,  # not available from battle log
             "icon_url": c.get("iconUrls", {}).get("medium"),
         }
         for c in raw_cards
@@ -272,9 +272,17 @@ def _parse_battle(raw: dict) -> dict | None:
         t1, t2 = t2, t1
         t1_tag, t2_tag = t2_tag, t1_tag
 
-    battle_time = raw.get("battleTime", "")
-    key_src = f"{battle_time}|{t1_tag}|{t2_tag}"
+    battle_time_raw = raw.get("battleTime", "")
+    key_src = f"{battle_time_raw}|{t1_tag}|{t2_tag}"
     battle_key = hashlib.sha1(key_src.encode()).hexdigest()
+
+    # CR API format: "20260311T183525.000Z" → datetime
+    try:
+        battle_time: datetime | None = datetime.strptime(
+            battle_time_raw, "%Y%m%dT%H%M%S.%fZ"
+        ).replace(tzinfo=timezone.utc)
+    except (ValueError, TypeError):
+        battle_time = None
 
     t1_crowns = t1.get("crowns", 0)
     t2_crowns = t2.get("crowns", 0)
@@ -401,32 +409,80 @@ async def upsert_decks(
     session: AsyncSession,
     battle_rows: list[dict],
     min_count: int,
+    season: str,
 ) -> tuple[int, int]:
-    """Aggregate decks from *battle_rows* (pathOfLegend only) and upsert."""
-    # ---- aggregate --------------------------------------------------------
+    """Aggregate decks from *battle_rows* (pathOfLegend only) and upsert.
+
+    All stats are scoped under ``matchup_stats['seasons'][season]`` so that
+    historical data from previous seasons (and patches) is preserved and each
+    season's snapshot remains independently queryable.
+
+    ``matchup_stats`` shape::
+
+        {
+            "deck_key": "<sha1>",
+            "seasons": {
+                "2026-03": {
+                    "global_winrate": 54.2,
+                    "meta_share": 3.17,
+                    "sample_size": 42,
+                    "wins": 23,
+                    "matchups": {
+                        "<opp_deck_key>": {"winrate": 61.5, "sample_size": 13,
+                                           "last_updated": "2026-03-11T..."}
+                    },
+                    "variants": ["<deck_key_with_6_shared_cards>"],
+                    "last_updated": "2026-03-11T..."
+                }
+            }
+        }
+
+    On every run the current season's data is fully replaced; all other
+    seasons are left untouched.
+    """
+    # ---- single-pass aggregation -----------------------------------------
     plays: dict[str, int] = defaultdict(int)
     wins: dict[str, int] = defaultdict(int)
-    deck_cards_map: dict[str, list[dict]] = {}  # deck_key → raw card list
+    deck_cards_map: dict[str, list[dict]] = {}
+
+    # matchup tracking: sorted pair (dk_a, dk_b) with dk_a < dk_b
+    mu_plays: dict[tuple[str, str], int] = defaultdict(int)
+    # wins for the lexicographically smaller key (dk_a)
+    mu_wins_a: dict[tuple[str, str], int] = defaultdict(int)
 
     for battle in battle_rows:
         if battle.get("battle_type") != "pathOfLegend":
             continue
 
-        for side in ("team1_cards", "team2_cards"):
-            cards = battle.get(side, [])
-            if not cards:
-                continue
-            card_ids = [str(c.get("id", "")) for c in cards if c.get("id") is not None]
-            if len(card_ids) != 8:
-                continue
-            dk = _deck_key(card_ids)
-            plays[dk] += 1
-            deck_cards_map[dk] = cards
+        t1_cards = battle.get("team1_cards", [])
+        t2_cards = battle.get("team2_cards", [])
+        t1_ids = [str(c["id"]) for c in t1_cards if c.get("id") is not None]
+        t2_ids = [str(c["id"]) for c in t2_cards if c.get("id") is not None]
+        if len(t1_ids) != 8 or len(t2_ids) != 8:
+            continue
 
-            # Determine if this side won
-            side_tag_key = "team1_tag" if side == "team1_cards" else "team2_tag"
-            if battle.get("winner_tag") == battle.get(side_tag_key):
-                wins[dk] += 1
+        dk1 = _deck_key(t1_ids)
+        dk2 = _deck_key(t2_ids)
+        plays[dk1] += 1
+        plays[dk2] += 1
+        deck_cards_map[dk1] = t1_cards
+        deck_cards_map[dk2] = t2_cards
+
+        winner_tag = battle.get("winner_tag")
+        if winner_tag == battle.get("team1_tag"):
+            wins[dk1] += 1
+        elif winner_tag == battle.get("team2_tag"):
+            wins[dk2] += 1
+
+        # head-to-head (skip mirror matches)
+        if dk1 != dk2:
+            pair = (min(dk1, dk2), max(dk1, dk2))
+            mu_plays[pair] += 1
+            # count win for dk_a (= pair[0])
+            if (winner_tag == battle.get("team1_tag") and dk1 == pair[0]) or (
+                winner_tag == battle.get("team2_tag") and dk2 == pair[0]
+            ):
+                mu_wins_a[pair] += 1
 
     # ---- filter noise -----------------------------------------------------
     qualified = {dk for dk, p in plays.items() if p >= min_count}
@@ -435,13 +491,67 @@ async def upsert_decks(
     if not qualified:
         return 0, 0
 
-    # ---- load existing deck_keys from DB ----------------------------------
-    rows_existing = await session.execute(
-        text("SELECT id, matchup_stats->>'deck_key' AS dk FROM decks")
-    )
-    existing: dict[str, int] = {
-        row.dk: row.id for row in rows_existing if row.dk
+    # ---- meta share -------------------------------------------------------
+    total_appearances = sum(plays[dk] for dk in qualified)
+
+    # ---- matchup dicts per deck -------------------------------------------
+    now_iso = datetime.now(timezone.utc).isoformat()
+    deck_matchups: dict[str, dict[str, dict]] = {dk: {} for dk in qualified}
+
+    for (dka, dkb), mp in mu_plays.items():
+        if dka not in qualified or dkb not in qualified:
+            continue
+        w_a = mu_wins_a.get((dka, dkb), 0)
+        w_b = mp - w_a
+        deck_matchups[dka][dkb] = {
+            "wins": w_a,
+            "losses": mp - w_a,
+            "winrate": round(w_a / mp * 100, 2) if mp else 0.0,
+            "sample_size": mp,
+            "last_updated": now_iso,
+        }
+        deck_matchups[dkb][dka] = {
+            "wins": w_b,
+            "losses": mp - w_b,
+            "winrate": round(w_b / mp * 100, 2) if mp else 0.0,
+            "sample_size": mp,
+            "last_updated": now_iso,
+        }
+
+    # ---- variant detection (share ≥ 6 of 8 cards) ------------------------
+    # Build card-id sets once
+    dk_cardset: dict[str, frozenset] = {
+        dk: frozenset(str(c["id"]) for c in deck_cards_map[dk] if c.get("id") is not None)
+        for dk in qualified
     }
+    qualified_list = list(qualified)
+    deck_variants: dict[str, list[str]] = {dk: [] for dk in qualified}
+    for i, dka in enumerate(qualified_list):
+        for dkb in qualified_list[i + 1 :]:
+            if len(dk_cardset[dka] & dk_cardset[dkb]) >= 6:
+                deck_variants[dka].append(dkb)
+                deck_variants[dkb].append(dka)
+
+    log.info(
+        "Computed matchups for %d qualified decks (%d pairs)",
+        len(qualified),
+        len(mu_plays),
+    )
+
+    # ---- load existing deck records (id + full matchup_stats) from DB -----
+    rows_existing = await session.execute(
+        text(
+            "SELECT id, matchup_stats->>'deck_key' AS dk,"
+            " matchup_stats AS full_ms FROM decks"
+        )
+    )
+    # existing: deck_key → (row_id, current matchup_stats dict)
+    existing: dict[str, tuple[int, dict]] = {}
+    for row in rows_existing:
+        if row.dk:
+            raw_ms = row.full_ms
+            ms = raw_ms if isinstance(raw_ms, dict) else {}
+            existing[row.dk] = (row.id, ms)
 
     inserted = 0
     updated = 0
@@ -450,32 +560,41 @@ async def upsert_decks(
         raw_cards = deck_cards_map[dk]
         p = plays[dk]
         w = wins[dk]
-        winrate = round(w / p * 100, 2) if p else 0.0
 
-        matchup_stats = {
-            "deck_key": dk,
-            "global_winrate": winrate,
-            "meta_share": 0.0,
+        # All stats are stored under the season key so every run only
+        # overwrites its own season slice; other seasons are preserved.
+        season_data = {
+            "global_winrate": round(w / p * 100, 2) if p else 0.0,
+            "meta_share": round(p / total_appearances * 100, 4) if total_appearances else 0.0,
             "sample_size": p,
             "wins": w,
-            "matchups": {},
+            "losses": p - w,
+            "matchups": deck_matchups.get(dk, {}),
+            "variants": deck_variants.get(dk, []),
+            "last_updated": now_iso,
         }
 
         if dk in existing:
+            row_id, existing_ms = existing[dk]
+            # Merge: keep all historical seasons, replace only the current one
+            all_seasons = dict(existing_ms.get("seasons", {}))
+            all_seasons[season] = season_data
+            merged_ms = {"deck_key": dk, "seasons": all_seasons}
             await session.execute(
                 text(
                     "UPDATE decks SET matchup_stats = :ms, avg_elixir = :avg,"
                     " updated_at = NOW() WHERE id = :id"
                 ),
                 {
-                    "ms": matchup_stats,
+                    "ms": merged_ms,
                     "avg": _avg_elixir(raw_cards),
-                    "id": existing[dk],
+                    "id": row_id,
                 },
             )
             updated += 1
         else:
             avg = _avg_elixir(raw_cards)
+            matchup_stats = {"deck_key": dk, "seasons": {season: season_data}}
             deck = Deck(
                 name=_deck_name(raw_cards),
                 archetype=_archetype(raw_cards, avg),
@@ -573,7 +692,7 @@ async def run(
             log.info("Battles – inserted: %d, already present: %d", battle_inserted, battle_skipped)
 
             log.info("=== Phase 5: aggregating and upserting decks (pathOfLegend only) ===")
-            deck_inserted, deck_updated = await upsert_decks(session, all_battle_rows, min_count)
+            deck_inserted, deck_updated = await upsert_decks(session, all_battle_rows, min_count, season)
             log.info("Decks – inserted: %d, updated: %d", deck_inserted, deck_updated)
 
     await engine.dispose()

@@ -24,6 +24,7 @@ export interface DeckListItem {
   archetype: string;
   avg_elixir: number;
   card_count: number;
+  cards: Card[];
 }
 
 /**
@@ -43,6 +44,8 @@ export interface MatchupStats {
   opponent_deck_name: string;
   opponent_archetype: string;
   winrate: number;
+  wins: number;
+  losses: number;
   sample_size: number;
   top_1000_winrate: number;
   last_updated: string;
@@ -55,6 +58,8 @@ export interface DeckStats {
   deck: Deck;
   matchups: MatchupStats[];
   global_winrate: number;
+  wins: number;
+  losses: number;
   meta_share: number;
 }
 

@@ -24,8 +24,8 @@ class Card(BaseModel):
     rarity: Literal["common", "rare", "epic", "legendary", "champion"] = Field(
         ..., description="Card rarity"
     )
-    type: Literal["troop", "spell", "building"] = Field(
-        ..., description="Card type"
+    type: Literal["troop", "spell", "building"] | None = Field(
+        None, description="Card type"
     )
     icon_url: str | None = Field(None, description="URL to card icon image")
 
@@ -98,6 +98,7 @@ class DeckListItem(BaseModel):
     archetype: str
     avg_elixir: float
     card_count: int = Field(..., description="Always 8")
+    cards: list[Card] = Field(default_factory=list, description="8 cards in the deck")
 
 
 # =============================================================================
@@ -114,6 +115,8 @@ class MatchupStats(BaseModel):
     winrate: float = Field(
         ..., ge=0, le=100, description="Win percentage (0-100)"
     )
+    wins: int = Field(0, ge=0, description="Number of wins in this matchup")
+    losses: int = Field(0, ge=0, description="Number of losses in this matchup")
     sample_size: int = Field(
         ..., ge=0, description="Number of recorded matches"
     )
@@ -139,6 +142,8 @@ class DeckStatsResponse(BaseModel):
         le=100,
         description="Overall winrate across all matchups",
     )
+    wins: int = Field(0, ge=0, description="Total wins")
+    losses: int = Field(0, ge=0, description="Total losses")
     meta_share: float = Field(
         ...,
         ge=0,

@@ -44,25 +44,34 @@
   }
 
   <!-- ══ POPULAR DECKS ══ -->
-  @if (featuredDecks().length > 0 && !currentDeck()) {
+  @if (featuredDecks().length > 0) {
   <section class="mb-10">
     <h2 class="flex items-center gap-2 text-sm font-black tracking-widest uppercase mb-4 text-[#f6c237]">
       <span>👑</span> Popular Decks
     </h2>
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
       @for (deck of featuredDecks(); track deck.id) {
-      <button class="text-left w-full px-4 py-3 rounded-xl cursor-pointer transition-all bg-[#0c1e3a]/60 border"
-        [ngClass]="currentDeck()?.id === deck.id
-                ? 'border-[#f6c237]/33 bg-[#f6c237]/8'
-                : 'border-[#1c3a6a] hover:border-[#2c4a8a]'" (click)="onSelectDeck(deck.id)">
-        <div class="flex items-start justify-between gap-2">
-          <div class="min-w-0">
-            <h3 class="font-bold text-sm text-white truncate leading-tight">{{ deck.name }}</h3>
-            <span class="text-xs font-semibold tracking-widest uppercase text-[#f6c237]/75">{{ deck.archetype }}</span>
+      <button
+        class="text-left w-full px-4 py-3 rounded-xl cursor-pointer transition-all bg-[#0c1e3a]/60 border border-[#1c3a6a] hover:border-[#2c4a8a]"
+        (click)="onSelectDeck(deck.id)">
+        <div class="flex flex-col gap-2">
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0">
+              <h3 class="font-bold text-sm text-white truncate leading-tight">{{ deck.name }}</h3>
+              <span class="text-xs font-semibold tracking-widest uppercase text-[#f6c237]/75">{{ deck.archetype
+                }}</span>
+            </div>
+            <span
+              class="text-xs font-black px-2 py-0.5 rounded-full shrink-0 bg-[#0a1828] border border-[#1c3a6a] text-[#7ba8d0]">💧
+              {{ deck.avg_elixir }}</span>
           </div>
-          <span
-            class="text-xs font-black px-2 py-0.5 rounded-full shrink-0 bg-[#0a1828] border border-[#1c3a6a] text-[#7ba8d0]">💧
-            {{ deck.avg_elixir }}</span>
+          @if (deck.cards.length) {
+          <div class="flex flex-wrap gap-1">
+            @for (card of deck.cards; track card.id) {
+            <app-card-icon [card]="card" size="sm" [showElixir]="false" />
+            }
+          </div>
+          }
         </div>
       </button>
       }
@@ -70,10 +79,7 @@
   </section>
   }
 
-  <!-- ══ CONTENT AREA ══ -->
-
-  <!-- Deck List (when no deck selected) -->
-  @if (!currentDeck()) {
+  <!-- ══ DECK LIST ══ -->
   <div class="rounded-xl overflow-hidden bg-[#0c1e3a]/60 border border-[#1c3a6a]">
 
     @if (isLoading() && filteredDecks().length === 0) {
@@ -85,90 +91,34 @@
       <p class="text-sm font-semibold" style="color: #4a6a8c;">Try a different search term</p>
     </div>
     } @else {
-    <div class="overflow-y-auto" style="max-height: 680px;">
+    <div>
       @for (deck of filteredDecks(); track deck.id) {
       <button
-        class="w-full text-left px-4 py-3 flex items-center justify-between gap-3 cursor-pointer transition-all border-0 bg-transparent hover:bg-[#f6c237]/5 border-b border-[#1a3060]/50"
+        class="w-full text-left px-4 py-3 flex flex-col gap-2 cursor-pointer transition-all border-0 bg-transparent hover:bg-[#f6c237]/5 border-b border-[#1a3060]/50"
         (click)="onSelectDeck(deck.id)">
-        <div class="min-w-0">
-          <h3 class="font-semibold text-sm text-white truncate leading-snug">{{ deck.name }}</h3>
-          <span class="text-xs font-semibold tracking-widest uppercase" style="color: #4a6a8c;">{{ deck.archetype
-            }}</span>
+        <div class="flex items-center justify-between gap-3">
+          <div class="min-w-0">
+            <h3 class="font-semibold text-sm text-white truncate leading-snug">{{ deck.name }}</h3>
+            <span class="text-xs font-semibold tracking-widest uppercase" style="color: #4a6a8c;">{{ deck.archetype
+              }}</span>
+          </div>
+          <span
+            class="text-xs font-black px-2 py-0.5 rounded-full shrink-0 bg-[#0a1828] border border-[#1c3a6a] text-[#7ba8d0]">💧{{
+            deck.avg_elixir }}</span>
         </div>
-        <span
-          class="text-xs font-black px-2 py-0.5 rounded-full shrink-0 bg-[#0a1828] border border-[#1c3a6a] text-[#7ba8d0]">💧{{
-          deck.avg_elixir }}</span>
+        @if (deck.cards.length) {
+        <div class="flex flex-wrap gap-1">
+          @for (card of deck.cards; track card.id) {
+          <app-card-icon [card]="card" size="sm" [showElixir]="false" />
+          }
+        </div>
+        }
       </button>
       }
     </div>
     }
 
   </div>
-  }
-
-  <!-- Deck Details (when deck selected) -->
-  @if (currentDeck()) {
-  <div #deckDetailsSection>
-
-    <!-- Back button -->
-    <button
-      class="flex items-center gap-2 mb-6 px-4 py-2 rounded-lg font-bold text-sm cursor-pointer transition-all bg-[#0c1e3a] border border-[#1c3a6a] text-[#4a6a9c] hover:text-[#b8cce8] hover:border-[#2c4a8a]"
-      (click)="onClearSelection()">
-      <span>←</span>
-      <span>Back to list</span>
-    </button>
-
-    <!-- Deck display card -->
-    <div class="mb-6 p-4 rounded-xl" style="background: rgba(10,20,40,0.55); border: 1px solid rgba(246,194,55,0.18);">
-      <app-deck-display [deck]="currentDeck()!" [cardSize]="'lg'" [showMeta]="true" />
-    </div>
-
-    <!-- Loading stats -->
-    @if (isLoading() && !currentDeckStats()) {
-    <app-loading-spinner message="Loading matchup statistics…" size="md" />
-    }
-
-    <!-- Stats + Matchups -->
-    @if (currentDeckStats()) {
-    <div>
-
-      <!-- Global stat pills -->
-      <div class="flex flex-wrap gap-3 mb-6">
-        <div class="flex items-center gap-3 px-4 py-2 rounded-xl bg-[#0c1e3a]/80 border border-[#1c3a6a]">
-          <span class="text-xs font-bold uppercase tracking-widest text-[#4a6a9c]">Global WR</span>
-          <app-winrate-badge [winrate]="currentDeckStats()!.global_winrate" [size]="'md'" />
-        </div>
-        <div class="flex items-center gap-3 px-4 py-2 rounded-xl bg-[#0c1e3a]/80 border border-[#1c3a6a]">
-          <span class="text-xs font-bold uppercase tracking-widest text-[#4a6a9c]">Meta Share</span>
-          <span class="font-black text-[#c8dcf0] text-sm">{{ currentDeckStats()!.meta_share.toFixed(1) }}%</span>
-        </div>
-        <div class="flex items-center gap-3 px-4 py-2 rounded-xl bg-[#0c1e3a]/80 border border-[#1c3a6a]">
-          <span class="text-xs font-bold uppercase tracking-widest text-[#4a6a9c]">Matchups</span>
-          <span class="font-black text-[#c8dcf0] text-sm">{{ currentDeckStats()!.matchups.length }}</span>
-        </div>
-      </div>
-
-      <!-- Matchups list -->
-      <div>
-        <h2 class="flex items-center gap-2 text-sm font-black tracking-widest uppercase mb-3 text-[#f6c237]">
-          <span>⚔️</span> Matchup Statistics
-        </h2>
-        <p class="text-xs font-semibold mb-4" style="color: #4a6a8c;">
-          Click any matchup to see Oracle tactical advice
-        </p>
-        <div class="flex flex-col gap-2">
-          @for (matchup of currentDeckStats()!.matchups; track matchup.opponent_deck_id) {
-          <app-matchup-card [matchup]="matchup" [playerDeckId]="currentDeck()!.id"
-            (clicked)="onViewMatchup(currentDeck()!.id, $event)" />
-          }
-        </div>
-      </div>
-
-    </div>
-    }
-
-  </div>
-  }
 
 </div>
 
@@ -204,8 +154,10 @@
         class="cursor-pointer px-5 py-2.5 rounded-lg font-bold text-sm transition-all bg-[#0c1e3a] border border-[#1c3a6a] text-[#7ba8d0] hover:border-[#2c4a8a]"
         (click)="showImportModal = false">Cancel</button>
       <button
-        class="cursor-pointer px-5 py-2.5 rounded-lg font-bold text-sm transition-all bg-[#f6c237]/15 border border-[#f6c237]/40 text-[#f6c237] hover:bg-[#f6c237]/20"
-        (click)="onImportPlayer()">Import Deck</button>
+        class="cursor-pointer px-5 py-2.5 rounded-lg font-bold text-sm transition-all bg-[#f6c237]/15 border border-[#f6c237]/40 text-[#f6c237] hover:bg-[#f6c237]/20 disabled:opacity-50"
+        [disabled]="importLoading" (click)="onImportPlayer()">
+        {{ importLoading ? 'Importing…' : 'Import Deck' }}
+      </button>
     </div>
 
   </div>
