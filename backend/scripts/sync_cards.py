@@ -43,6 +43,12 @@ sys.path.insert(0, str(ROOT))
 from app.config import get_settings  # noqa: E402
 from app.b_models.card import Card  # noqa: E402
 from app.database import Base  # noqa: E402
+# Import all models so SQLAlchemy's mapper registry can resolve all relationships
+from app.b_models.battle import Battle  # noqa: E402, F401
+from app.b_models.deck import Deck  # noqa: E402, F401
+from app.b_models.player import Player  # noqa: E402, F401
+from app.b_models.player_season_rank import PlayerSeasonRank  # noqa: E402, F401
+from app.b_models.season import Season  # noqa: E402, F401
 
 logging.basicConfig(
     level=logging.INFO,

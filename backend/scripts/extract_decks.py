@@ -34,11 +34,17 @@ What it does
 Auto-naming
 -----------
 Deck names are derived from the two highest-elixir cards.
-Archetype is guessed heuristically:
-  avg_elixir < 2.9  → "Cycle"
-  avg_elixir < 3.5  → "Midladder"
-  highest elixir ≥ 7 → "Beatdown"
-  otherwise          → "Control"
+Archetype is derived from win conditions and bait patterns (first match wins):
+  Siege            – X-Bow or Mortar present
+  Graveyard        – Graveyard spell present
+  Bridge Spam      – P.E.K.K.A + ≥2 bridge-spam support cards
+  Three Musketeers – Three Musketeers present
+  Log Bait         – Goblin Barrel + ≥3 log-bait cards (incl. Barrel itself)
+  Fireball Bait    – ≥3 fireball-bait cards (medium clumping units/buildings)
+  Beatdown         – heavy tank (Golem / Giant / Royal Giant / Lava Hound…)
+  Balloon          – Balloon without a beatdown tank
+  Cycle            – fast win condition or avg elixir < 3.0
+  Control          – fallback
 """
 
 import argparse
@@ -56,7 +62,11 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from app.b_models.battle import Battle  # noqa: E402
+from app.b_models.card import Card  # noqa: E402, F401
 from app.b_models.deck import Deck  # noqa: E402
+from app.b_models.player import Player  # noqa: E402, F401
+from app.b_models.player_season_rank import PlayerSeasonRank  # noqa: E402, F401
+from app.b_models.season import Season  # noqa: E402, F401
 from app.config import get_settings  # noqa: E402
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -77,14 +87,91 @@ def _avg_elixir(cards: list[dict]) -> float:
     return round(sum(costs) / len(costs), 2) if costs else 0.0
 
 
+# ── Win-condition & bait lookup tables (lowercase, matched via .lower()) ────
+_SIEGE_WCS = {"x-bow", "mortar"}
+_BEATDOWN_WCS = {
+    "golem", "giant", "royal giant", "lava hound",
+    "electro giant", "mega knight", "giant skeleton",
+}
+# P.E.K.K.A is Bridge Spam when paired with ≥2 of these support cards
+_PEKKA_BRIDGE_SUPPORT = {
+    "bandit", "battle ram", "electro wizard", "magic archer",
+    "royal ghost", "dark prince", "goblin giant",
+}
+_BALLOON_WCS = {"balloon"}
+_GRAVEYARD_WCS = {"graveyard"}
+_THREE_MUSC_WCS = {"three musketeers"}
+_CYCLE_WCS = {"hog rider", "goblin barrel", "goblin drill", "ram rider", "royal hogs", "miner"}
+# Small ground troops vulnerable to The Log
+_LOG_BAITABLES = {
+    "goblin barrel", "princess", "goblin gang", "bats",
+    "skeletons", "skeleton army", "minion horde", "minions",
+    "rascals", "spear goblins", "zappies",
+}
+# Medium clumping units / buildings vulnerable to Fireball / Poison
+_FIREBALL_BAITABLES = {
+    "wizard", "electro wizard", "baby dragon", "sparky",
+    "goblin giant", "furnace", "goblin hut", "barbarian hut",
+    "barbarians", "elite barbarians",
+}
+
+
 def _archetype(cards: list[dict], avg: float) -> str:
-    max_elixir = max((c.get("elixirCost") or 0 for c in cards), default=0)
-    if avg < 2.9:
-        return "Cycle"
-    if max_elixir >= 7:
+    """Classify a deck archetype from its 8 cards and average elixir cost.
+
+    Detection order (first match wins):
+    1. Siege            – X-Bow / Mortar
+    2. Graveyard        – Graveyard spell
+    3. Bridge Spam      – P.E.K.K.A + ≥2 bridge-spam supports
+    4. Three Musketeers – Three Musketeers
+    5. Log Bait         – Goblin Barrel + ≥3 log-bait cards (incl. itself)
+    6. Fireball Bait    – ≥3 fireball-bait cards in the deck
+    7. Beatdown         – heavy tank (Golem / Giant / Lava Hound / …)
+    8. Balloon          – Balloon without a beatdown tank already caught above
+    9. Cycle            – fast win condition or avg elixir < 3.0
+    10. Control         – fallback
+    """
+    names = {c.get("name", "").lower() for c in cards}
+
+    # 1. Siege
+    if names & _SIEGE_WCS:
+        return "Siege"
+
+    # 2. Graveyard
+    if names & _GRAVEYARD_WCS:
+        return "Graveyard"
+
+    # 3. Bridge Spam – P.E.K.K.A + ≥2 bridge-spam support cards
+    if "p.e.k.k.a" in names and len(names & _PEKKA_BRIDGE_SUPPORT) >= 2:
+        return "Bridge Spam"
+
+    # 4. Three Musketeers
+    if names & _THREE_MUSC_WCS:
+        return "Three Musketeers"
+
+    # 5. Log Bait – Goblin Barrel (primary win cond) + ≥3 log-bait cards
+    log_bait_count = sum(1 for n in names if n in _LOG_BAITABLES)
+    if "goblin barrel" in names and log_bait_count >= 3:
+        return "Log Bait"
+
+    # 6. Fireball Bait – ≥3 fireball-bait cards present
+    fireball_bait_count = sum(1 for n in names if n in _FIREBALL_BAITABLES)
+    if fireball_bait_count >= 3:
+        return "Fireball Bait"
+
+    # 7. Beatdown – heavy tanks; P.E.K.K.A alone also qualifies
+    if (names & _BEATDOWN_WCS) or "p.e.k.k.a" in names:
         return "Beatdown"
-    if avg < 3.5:
-        return "Midladder"
+
+    # 8. Balloon (without a beatdown tank already caught above)
+    if names & _BALLOON_WCS:
+        return "Balloon"
+
+    # 9. Fast win condition or low avg elixir → Cycle
+    if (names & _CYCLE_WCS) or avg < 3.0:
+        return "Cycle"
+
+    # 10. Fallback
     return "Control"
 
 

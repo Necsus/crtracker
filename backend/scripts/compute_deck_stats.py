@@ -45,7 +45,11 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]  # backend/
 sys.path.insert(0, str(ROOT))
 
 from app.b_models.battle import Battle  # noqa: E402
+from app.b_models.card import Card  # noqa: E402, F401
 from app.b_models.deck import Deck  # noqa: E402
+from app.b_models.player import Player  # noqa: E402, F401
+from app.b_models.player_season_rank import PlayerSeasonRank  # noqa: E402, F401
+from app.b_models.season import Season  # noqa: E402, F401
 from app.c_bll.deck_service import DeckService  # noqa: E402
 from app.config import get_settings  # noqa: E402
 

@@ -12,7 +12,12 @@ from app.config import get_settings
 from app.database import Base
 
 # Import all models to ensure they're registered with SQLAlchemy
+from app.b_models.battle import Battle  # noqa: F401
+from app.b_models.card import Card  # noqa: F401
 from app.b_models.deck import Deck  # noqa: F401
+from app.b_models.player import Player  # noqa: F401
+from app.b_models.player_season_rank import PlayerSeasonRank  # noqa: F401
+from app.b_models.season import Season  # noqa: F401
 
 settings = get_settings()
 config = context.config
