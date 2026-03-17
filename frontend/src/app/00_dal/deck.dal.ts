@@ -14,6 +14,7 @@ import type {
   DeckListItem,
   DeckStats,
   PlayerImportResponse,
+  PlayerListItem,
   PlayerListResponse,
   PlayerProfile,
 } from '../01_models/deck.model';
@@ -159,6 +160,14 @@ export class DeckDal {
    */
   listPlayerSeasons(): Observable<string[]> {
     return this.http.get<string[]>(`${this.basePath}/players/seasons`);
+  }
+
+  /**
+   * Search players by name (partial) or battle tag (with or without #)
+   */
+  searchPlayers(q: string, limit = 20): Observable<PlayerListItem[]> {
+    const url = buildUrl(`${this.basePath}/players/search`, { q, limit });
+    return this.http.get<PlayerListItem[]>(url);
   }
 
   /**
