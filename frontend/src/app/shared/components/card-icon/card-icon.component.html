@@ -31,6 +31,22 @@
   </div>
   }
 
+  <!-- Evolved badge -->
+  @if (isEvolved()) {
+  <div class="absolute top-0 left-0 z-10 px-1 py-0.5 rounded-br text-[0.5rem] font-black leading-none tracking-wider
+              bg-cyan-500/90 text-white" aria-label="Evolved card">
+    ⚡
+  </div>
+  }
+
+  <!-- Golden badge -->
+  @if (isGolden() && !isEvolved()) {
+  <div class="absolute top-0 left-0 z-10 px-1 py-0.5 rounded-br text-[0.5rem] font-black leading-none
+              bg-yellow-400/90 text-black" aria-label="Golden skin">
+    ✦
+  </div>
+  }
+
   <!-- Shine overlay on hover -->
   <div class="card-icon__shine" aria-hidden="true"></div>
 

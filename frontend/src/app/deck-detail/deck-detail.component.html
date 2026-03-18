@@ -30,9 +30,27 @@
   </a>
 
   <!-- Deck display card -->
-  <div class="mb-6 p-4 rounded-xl" style="background: rgba(10,20,40,0.55); border: 1px solid rgba(246,194,55,0.18);">
+  <div class="mb-4 p-4 rounded-xl" style="background: rgba(10,20,40,0.55); border: 1px solid rgba(246,194,55,0.18);">
     <app-deck-display [deck]="deck()!" [cardSize]="'lg'" [showMeta]="true" />
   </div>
+
+  <!-- Archetype classification badge -->
+  @if (deck()!.archetype_id != null || deck()!.deck_key) {
+  <div class="flex flex-wrap items-center gap-2 mb-4 px-1">
+    @if (deck()!.archetype_id != null) {
+    <a routerLink="/archetypes" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold no-underline transition-all
+             bg-[#f6c237]/10 border border-[#f6c237]/30 text-[#f6c237] hover:bg-[#f6c237]/20">
+      🃏 Voir archétype #{{ deck()!.archetype_id }}
+    </a>
+    }
+    @if (deck()!.deck_key) {
+    <span class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold
+                 bg-[#0c1e3a]/80 border border-[#1c3a6a] text-[#4a6a9c]" title="Fingerprint SHA-1 du deck">
+      🔑 {{ deck()!.deck_key!.slice(0, 8) }}…
+    </span>
+    }
+  </div>
+  }
 
   <!-- Tab bar -->
   <div class="flex gap-1 mb-6 p-1 rounded-xl"
@@ -88,6 +106,29 @@
         <span class="font-black text-[#c8dcf0] text-sm">{{ stats()!.matchups.length }}</span>
       </div>
     </div>
+
+    <!-- Meta history section -->
+    @if (metaHistory().length > 0) {
+    <div class="mb-6">
+      <h2 class="flex items-center gap-2 text-sm font-black tracking-widest uppercase mb-3 text-[#f6c237]">
+        <span>📈</span> Historique Meta
+      </h2>
+      <div class="flex flex-wrap gap-2">
+        @for (entry of metaHistory(); track entry.id) {
+        <div class="flex flex-col gap-1 px-4 py-2.5 rounded-xl border bg-[#060e1a]/60"
+          [ngClass]="metaStatusColors[entry.status]">
+          <span class="text-[0.65rem] font-bold tracking-widest uppercase opacity-70">
+            Saison {{ entry.season_name ?? entry.season_id }}
+          </span>
+          <span class="text-sm font-black">{{ metaStatusLabels[entry.status] }}</span>
+          @if (entry.usage_rate != null) {
+          <span class="text-[0.65rem] font-semibold opacity-70">{{ entry.usage_rate.toFixed(1) }}% usage</span>
+          }
+        </div>
+        }
+      </div>
+    </div>
+    }
 
     <!-- Matchups list -->
     <div>

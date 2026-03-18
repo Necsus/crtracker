@@ -7,7 +7,7 @@ without excessive table relationships.
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import JSON, DateTime, String, Text
+from sqlalchemy import JSON, DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
@@ -27,7 +27,24 @@ class Deck(Base):
 
     # Deck metadata
     name: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+
+    # Legacy free-text archetype kept for backward compatibility with old data.
+    # New code should use archetype_id instead.
     archetype: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+
+    # FK to the curated archetypes table. Nullable: populated progressively
+    # by the fingerprinting service; NULL means not yet classified.
+    archetype_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("archetypes.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+
+    # SHA-1 fingerprint of the sorted card ID list (40 hex chars).
+    # Indexed for fast lookup; replaces the embedded matchup_stats["deck_key"].
+    deck_key: Mapped[Optional[str]] = mapped_column(
+        String(40), nullable=True, index=True
+    )
 
     # Cards stored as JSONB array of card objects
     # Example: [{"id": "golem", "name": "Golem", "elixir": 8, "rarity": "epic", ...}, ...]
@@ -77,7 +94,8 @@ class Deck(Base):
     )
 
     def __repr__(self) -> str:
-        return f"<Deck(id={self.id}, name='{self.name}', archetype='{self.archetype}')>"
+        archetype_info = f"archetype_id={self.archetype_id}" if self.archetype_id else f"archetype='{self.archetype}'"
+        return f"<Deck(id={self.id}, name='{self.name}', {archetype_info})>"
 
     @property
     def card_count(self) -> int:

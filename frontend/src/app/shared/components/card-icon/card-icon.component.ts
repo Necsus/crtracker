@@ -47,8 +47,16 @@ export class CardIconComponent {
       'card-icon--spell': card.type === 'spell',
       'card-icon--troop': card.type === 'troop',
       'card-icon--building': card.type === 'building',
+      'card-icon--evolved': !!card.evolved,
+      'card-icon--golden': !!card.golden,
     };
   });
+
+  /** Whether the card is evolved */
+  readonly isEvolved = computed(() => !!this.card().evolved);
+
+  /** Whether the card has a golden skin */
+  readonly isGolden = computed(() => !!this.card().golden);
 
   /** Elixir color based on cost */
   readonly elixirColor = computed(() => {

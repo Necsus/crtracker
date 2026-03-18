@@ -9,6 +9,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { DeckDal } from '../00_dal/deck.dal';
 import type { Battle, BattleCard, Card, Deck, DeckStats } from '../01_models/deck.model';
+import { ArchetypeService, META_STATUS_COLORS, META_STATUS_LABELS } from '../10_bll/archetype.service';
 import { CardIconComponent } from '../shared/components/card-icon/card-icon.component';
 import { DeckDisplayComponent } from '../shared/components/deck-display/deck-display.component';
 import { LoadingSpinnerComponent } from '../shared/components/loading-spinner/loading-spinner.component';
@@ -36,6 +37,11 @@ const TYPE_META: Record<string, { label: string; emoji: string; color: string }>
 })
 export class DeckDetailComponent implements OnInit {
   private readonly dal = inject(DeckDal);
+  private readonly archetypeService = inject(ArchetypeService);
+
+  readonly metaStatusColors = META_STATUS_COLORS;
+  readonly metaStatusLabels = META_STATUS_LABELS;
+  readonly metaHistory = computed(() => this.archetypeService.metaHistory());
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -68,6 +74,7 @@ export class DeckDetailComponent implements OnInit {
     }
     this.loadDeck(id);
     this.loadBattles(id, 0);
+    this.archetypeService.loadMetaHistory(id);
   }
 
   private loadDeck(id: number): void {

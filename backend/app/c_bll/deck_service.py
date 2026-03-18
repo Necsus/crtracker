@@ -62,6 +62,8 @@ class DeckService:
                 "rarity": str(rarity).lower(),
                 "type": c.get("type"),
                 "icon_url": c.get("icon_url") or c.get("iconUrls", {}).get("medium") if isinstance(c.get("iconUrls"), dict) else c.get("icon_url"),
+                "evolved": bool(c.get("evolved", False)),
+                "golden": bool(c.get("golden", False)),
             })
         return result
 
@@ -402,6 +404,8 @@ class DeckService:
             id=deck.id,
             name=deck.name,
             archetype=deck.archetype,
+            archetype_id=deck.archetype_id,
+            deck_key=deck.deck_key,
             cards=self._extract_cards(deck.cards),
             avg_elixir=deck.avg_elixir,
             created_at=deck.created_at,

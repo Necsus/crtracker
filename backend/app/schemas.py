@@ -28,6 +28,10 @@ class Card(BaseModel):
         None, description="Card type"
     )
     icon_url: str | None = Field(None, description="URL to card icon image")
+    # Evolved cards have different gameplay mechanics (e.g. Evolved Skeletons)
+    evolved: bool = Field(False, description="True if this is an evolved card")
+    # Golden skin is cosmetic only — no gameplay impact
+    golden: bool = Field(False, description="True if this card has a golden skin")
 
 
 # =============================================================================
@@ -53,6 +57,8 @@ class CardResponse(BaseModel):
     )
     icon_url: str | None = Field(None, description="URL to card icon image")
     description: str | None = Field(None, description="In-game card description")
+    evolved: bool = Field(False, description="True if this is an evolved card")
+    golden: bool = Field(False, description="True if this card has a golden skin")
 
     model_config = {"from_attributes": True}
 
@@ -83,7 +89,12 @@ class DeckResponse(BaseModel):
 
     id: int = Field(..., description="Deck database ID")
     name: str = Field(..., description="Deck name")
-    archetype: str = Field(..., description="Archetype")
+    # Legacy free-text archetype (always present for backward compat)
+    archetype: str = Field(..., description="Legacy archetype label")
+    # Resolved archetype ID from the curated catalogue (None if not yet classified)
+    archetype_id: int | None = Field(None, description="FK to archetypes table")
+    # SHA-1 fingerprint of sorted card IDs
+    deck_key: str | None = Field(None, description="SHA-1 deck fingerprint")
     cards: list[Card] = Field(..., description="8 cards in the deck")
     avg_elixir: float = Field(..., description="Average elixir cost")
     created_at: datetime = Field(..., description="Creation timestamp")
@@ -404,6 +415,103 @@ class PlayerImportResponse(BaseModel):
     player: PlayerProfile
     deck: DeckResponse | None = Field(None, description="Imported deck if available")
     message: str = Field(..., description="Status message")
+
+
+# =============================================================================
+# ARCHETYPE SCHEMAS
+# =============================================================================
+
+# Valid play styles — matches Archetype.play_style column values
+ArchetypePlayStyle = Literal[
+    "CYCLE", "BEATDOWN", "CONTROL", "BRIDGE_SPAM", "SIEGE", "HYBRID"
+]
+
+# Valid meta statuses — matches DeckMetaStatus.status column values
+MetaStatusValue = Literal[
+    "DOMINANT", "VIABLE", "ANTI_META", "OFF_META", "UNCLASSIFIED"
+]
+
+
+class ArchetypeCreate(BaseModel):
+    """Schema for creating a new curated archetype."""
+
+    name: str = Field(..., min_length=1, max_length=100)
+    win_condition: str = Field(..., min_length=1, max_length=50)
+    play_style: ArchetypePlayStyle
+    is_timeless: bool = Field(False)
+    variant_of_id: int | None = Field(None, description="Parent archetype ID")
+    # Ordered list of card slugs required to match this archetype
+    core_cards: list[str] = Field(
+        ...,
+        min_length=1,
+        description="Card slugs that MUST be present (e.g. ['hog-rider', 'ice-golem'])",
+    )
+    description: str | None = None
+
+
+class ArchetypeResponse(BaseModel):
+    """Full archetype response including variant tree info."""
+
+    id: int
+    name: str
+    win_condition: str
+    play_style: ArchetypePlayStyle
+    is_timeless: bool
+    variant_of_id: int | None
+    # Name of the parent archetype (denormalized for convenience)
+    variant_of_name: str | None = None
+    core_cards: list[str]
+    description: str | None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class ArchetypeListItem(BaseModel):
+    """Lightweight archetype for list views."""
+
+    id: int
+    name: str
+    win_condition: str
+    play_style: ArchetypePlayStyle
+    is_timeless: bool
+    variant_of_id: int | None
+    core_cards: list[str]
+
+    model_config = {"from_attributes": True}
+
+
+class ArchetypeWithVariants(ArchetypeResponse):
+    """Archetype response enriched with its variants."""
+
+    variants: list[ArchetypeListItem] = Field(default_factory=list)
+
+
+class DeckMetaStatusResponse(BaseModel):
+    """Competitive status for a deck in a season."""
+
+    id: int
+    deck_id: int
+    season_id: int
+    season_name: str | None = None
+    status: MetaStatusValue
+    usage_rate: float | None
+    winrate: float | None
+    sample_size: int | None
+    computed_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class DeckMetaStatusUpdate(BaseModel):
+    """Payload for upserting meta status (used by the compute job)."""
+
+    deck_id: int
+    season_id: int
+    status: MetaStatusValue
+    usage_rate: float | None = None
+    winrate: float | None = None
+    sample_size: int | None = None
 
 
 # =============================================================================

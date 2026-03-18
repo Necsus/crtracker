@@ -13,6 +13,10 @@ export interface Card {
   rarity: 'common' | 'rare' | 'epic' | 'legendary' | 'champion';
   type?: 'troop' | 'spell' | 'building';
   icon_url?: string;
+  /** True when the card is an evolved variant (different gameplay mechanics) */
+  evolved?: boolean;
+  /** True when the card has a golden cosmetic skin (no gameplay impact) */
+  golden?: boolean;
 }
 
 /**
@@ -34,6 +38,10 @@ export interface Deck extends DeckListItem {
   cards: Card[];
   created_at: string;
   updated_at?: string;
+  /** FK to the curated archetypes table; null = not yet classified */
+  archetype_id?: number | null;
+  /** SHA-1 fingerprint of sorted card IDs */
+  deck_key?: string | null;
 }
 
 /**
@@ -61,6 +69,66 @@ export interface DeckStats {
   wins: number;
   losses: number;
   meta_share: number;
+}
+
+/* ============================================
+   ARCHETYPE MODELS
+   ============================================ */
+
+export type ArchetypePlayStyle =
+  | 'CYCLE' | 'BEATDOWN' | 'CONTROL' | 'BRIDGE_SPAM' | 'SIEGE' | 'HYBRID';
+
+export type MetaStatusValue =
+  | 'DOMINANT' | 'VIABLE' | 'ANTI_META' | 'OFF_META' | 'UNCLASSIFIED';
+
+/** Lightweight archetype for list views */
+export interface ArchetypeListItem {
+  id: number;
+  name: string;
+  win_condition: string;
+  play_style: ArchetypePlayStyle;
+  /** True for archetypes that have persisted across many seasons ("Indemodable") */
+  is_timeless: boolean;
+  /** ID of the parent archetype, null for root archetypes */
+  variant_of_id: number | null;
+  /** Ordered list of card slugs required to match this archetype */
+  core_cards: string[];
+}
+
+/** Full archetype details */
+export interface ArchetypeResponse extends ArchetypeListItem {
+  variant_of_name: string | null;
+  description: string | null;
+  created_at: string;
+}
+
+/** Archetype with its variant children */
+export interface ArchetypeWithVariants extends ArchetypeResponse {
+  variants: ArchetypeListItem[];
+}
+
+/** Payload for creating/updating an archetype */
+export interface ArchetypeCreate {
+  name: string;
+  win_condition: string;
+  play_style: ArchetypePlayStyle;
+  is_timeless: boolean;
+  variant_of_id: number | null;
+  core_cards: string[];
+  description?: string | null;
+}
+
+/** Per-season competitive status for a deck */
+export interface DeckMetaStatus {
+  id: number;
+  deck_id: number;
+  season_id: number;
+  season_name?: string | null;
+  status: MetaStatusValue;
+  usage_rate: number | null;
+  winrate: number | null;
+  sample_size: number | null;
+  computed_at: string;
 }
 
 /* ============================================

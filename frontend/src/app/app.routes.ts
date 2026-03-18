@@ -47,6 +47,11 @@ export const appRoutes: Routes = [
       import('./player-detail/player-detail.routes').then((m) => m.PLAYER_DETAIL_ROUTES),
   },
   {
+    path: 'archetypes',
+    loadChildren: () =>
+      import('./archetypes-browser/archetypes-browser.routes').then((m) => m.ARCHETYPES_BROWSER_ROUTES),
+  },
+  {
     path: '**',
     redirectTo: '',
     pathMatch: 'full',
