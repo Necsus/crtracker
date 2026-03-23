@@ -68,8 +68,7 @@ export class PlayersListComponent implements OnInit, OnDestroy {
   }
 
   formatNumber(n: number): string {
-    if (n >= 1000) return (n / 1000).toFixed(1).replace('.0', '') + 'k';
-    return n.toString();
+    return n.toLocaleString('fr-FR');
   }
 
   trackByTag(_: number, player: PlayerListItem): string {

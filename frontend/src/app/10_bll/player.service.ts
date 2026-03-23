@@ -9,6 +9,8 @@ import { PlayerDetail, PlayerListItem, PlayerSearchResponse } from '../01_models
 export class PlayerService {
   private dal = inject(PlayerDal);
 
+  private static readonly PLAYER_CACHE_MS = 5 * 60 * 1000;
+
   // ── State signals ──────────────────────────────────────────────────────────
   topPlayers = signal<PlayerListItem[]>([]);
   topTotal = signal<number>(0);
@@ -19,6 +21,9 @@ export class PlayerService {
   searchLoadingState = signal<LoadingState>('idle');
   playerLoadingState = signal<LoadingState>('idle');
   error = signal<string | null>(null);
+
+  private _selectedPlayerTag: string | null = null;
+  private _selectedPlayerLoadedAt: number | null = null;
 
   // ── Derived ────────────────────────────────────────────────────────────────
   isLoadingTop = computed(() => this.topLoadingState() === 'loading');
@@ -62,11 +67,22 @@ export class PlayerService {
   }
 
   async loadPlayer(tag: string): Promise<void> {
+    const now = Date.now();
+    const isSameTag = this._selectedPlayerTag === tag;
+    const isFresh = this._selectedPlayerLoadedAt != null
+      && (now - this._selectedPlayerLoadedAt) < PlayerService.PLAYER_CACHE_MS;
+
+    if (isSameTag && isFresh && this.selectedPlayer() != null) {
+      return;
+    }
+
     this.playerLoadingState.set('loading');
     this.error.set(null);
     try {
       const player = await firstValueFrom(this.dal.getPlayer(tag));
       this.selectedPlayer.set(player);
+      this._selectedPlayerTag = tag;
+      this._selectedPlayerLoadedAt = Date.now();
       this.playerLoadingState.set('success');
     } catch {
       this.error.set('Joueur introuvable.');

@@ -40,7 +40,7 @@ export interface CardItem {
   maxLevel?: number;
   starLevel?: number;
   evolutionLevel?: number;
-  iconUrls?: { medium?: string };
+  iconUrls?: { medium?: string; evolutionMedium?: string; heroMedium?: string };
 }
 
 export interface LeagueStatistics {

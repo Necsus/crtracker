@@ -145,16 +145,19 @@
       Deck actuel
     </h2>
     <div class="grid grid-cols-4 gap-2">
-      @for (card of player.current_deck; track card.id) {
-      <div class="rounded-lg p-2 text-center" style="background:#0a1628; border:1px solid #1e3a5f;">
-        @if (card.iconUrls?.medium) {
-        <img [src]="card.iconUrls!.medium" [alt]="card.name" class="w-full h-auto rounded mb-1" />
+      @for (card of player.current_deck; track card.id; let i = $index) {
+      @let slotType = cardSlotType(i, card);
+      <div class="rounded-lg p-2 text-center relative">
+        @let imgSrc = cardImage(i, card);
+        @if (imgSrc) {
+        <img [src]="imgSrc" [alt]="card.name" class="w-full h-auto rounded mb-1" />
         }
-        <div class="text-xs font-bold leading-tight" style="color:#7ba8d0;">
+        <div class="text-xs font-bold leading-tight"
+          [style.color]="slotType === 'evolution' ? '#c4b5fd' : slotType === 'hero' ? '#fcd34d' : '#7ba8d0'">
           {{ card.name }}
         </div>
         @if (card.level) {
-        <div class="text-xs mt-0.5" style="color:#4a6a9c;">Lv. {{ card.level }}</div>
+        <div class="text-xs mt-0.5" style="color:#4a6a9c;">Niv. {{ cardDisplayLevel(card) }}</div>
         }
       </div>
       }

@@ -47,8 +47,29 @@ export class PlayerDetailComponent implements OnInit {
 
   formatNumber(n: number | null | undefined): string {
     if (n == null) return '—';
-    if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
-    if (n >= 1000) return (n / 1000).toFixed(1).replace('.0', '') + 'k';
-    return n.toString();
+    return n.toLocaleString('fr-FR');
+  }
+
+  cardDisplayLevel(card: { level?: number; maxLevel?: number }): number {
+    return (card.level ?? 1) + (16 - (card.maxLevel ?? 16));
+  }
+
+  /** Détermine le type de slot selon la position dans le deck. */
+  cardSlotType(index: number, card: { iconUrls?: { evolutionMedium?: string; heroMedium?: string } }): 'evolution' | 'hero' | 'normal' {
+    if (index === 0) return 'evolution';
+    if (index === 1) return 'hero';
+    if (index === 2) {
+      if (card.iconUrls?.evolutionMedium) return 'evolution';
+      if (card.iconUrls?.heroMedium) return 'hero';
+    }
+    return 'normal';
+  }
+
+  /** Retourne l'URL d'image adaptée au type de slot. */
+  cardImage(index: number, card: { iconUrls?: { medium?: string; evolutionMedium?: string; heroMedium?: string } }): string {
+    const type = this.cardSlotType(index, card);
+    if (type === 'evolution' && card.iconUrls?.evolutionMedium) return card.iconUrls.evolutionMedium;
+    if (type === 'hero' && card.iconUrls?.heroMedium) return card.iconUrls.heroMedium;
+    return card.iconUrls?.medium ?? '';
   }
 }
