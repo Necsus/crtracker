@@ -1,57 +1,54 @@
-/* ============================================
-   PLAYER DETAIL COMPONENT
-   Full profile page for a single Clash Royale player
-   ============================================ */
-
-import { DecimalPipe } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
-import { DeckDal } from '../00_dal/deck.dal';
-import type { PlayerProfile } from '../01_models/deck.model';
+import { PlayerService } from '../10_bll/player.service';
 import { LoadingSpinnerComponent } from '../shared/components/loading-spinner/loading-spinner.component';
 
 @Component({
   selector: 'app-player-detail',
   standalone: true,
-  imports: [RouterLink, LoadingSpinnerComponent, DecimalPipe],
+  imports: [RouterLink, LoadingSpinnerComponent, DatePipe],
   templateUrl: './player-detail.component.html',
 })
 export class PlayerDetailComponent implements OnInit {
-  private readonly dal = inject(DeckDal);
-  private readonly route = inject(ActivatedRoute);
-
-  /* ── State ──────────────────────────────────── */
-  readonly player = signal<PlayerProfile | null>(null);
-  readonly loading = signal(true);
-  readonly error = signal<string | null>(null);
+  service = inject(PlayerService);
+  private route = inject(ActivatedRoute);
 
   ngOnInit(): void {
     const tag = this.route.snapshot.paramMap.get('tag') ?? '';
-    this.dal.getPlayer(tag).subscribe({
-      next: (p) => {
-        this.player.set(p);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.error.set('Player not found or failed to load.');
-        this.loading.set(false);
-      },
-    });
+    this.service.loadPlayer(tag);
   }
 
-  /* ── Helpers ─────────────────────────────────── */
-
-  winRate(p: PlayerProfile): number {
-    const total = (p.wins ?? 0) + (p.losses ?? 0);
-    if (total === 0) return 0;
-    return ((p.wins ?? 0) / total) * 100;
+  winrateColor(wr: number | null): string {
+    if (wr === null) return '#6b7280';
+    if (wr >= 55) return '#22c55e';
+    if (wr >= 47) return '#eab308';
+    return '#ef4444';
   }
 
-  avgElixir(p: PlayerProfile): number {
-    const cards = p.current_deck ?? [];
-    const withCost = cards.filter((c) => c.elixir_cost !== null);
-    if (withCost.length === 0) return 0;
-    return withCost.reduce((sum, c) => sum + (c.elixir_cost ?? 0), 0) / withCost.length;
+  polLeagueLabel(league: number | null): string {
+    if (league === null) return '—';
+    const labels: Record<number, string> = {
+      1: 'Bronze I', 2: 'Bronze II', 3: 'Bronze III',
+      4: 'Silver I', 5: 'Silver II', 6: 'Gold',
+      7: 'Master', 8: 'Champion', 9: 'Grand Champion', 10: 'Ultimate Champion',
+    };
+    return labels[league] ?? `League ${league}`;
+  }
+
+  roleLabel(role: string | null): string {
+    const map: Record<string, string> = {
+      member: 'Membre', elder: 'Ancien',
+      coLeader: 'Co-Chef', leader: 'Chef',
+    };
+    return role ? (map[role] ?? role) : '';
+  }
+
+  formatNumber(n: number | null | undefined): string {
+    if (n == null) return '—';
+    if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
+    if (n >= 1000) return (n / 1000).toFixed(1).replace('.0', '') + 'k';
+    return n.toString();
   }
 }

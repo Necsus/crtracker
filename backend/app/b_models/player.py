@@ -1,81 +1,123 @@
-"""ORM Model for Clash Royale players.
-
-Populated by the sync_players script.  Each row represents one player
-from the Path of Legend global leaderboard, with their profile data and
-current deck.
-"""
+"""Player ORM model — maps to the `players` table."""
 
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import DateTime, Integer, String
-from sqlalchemy.dialects.postgresql import JSON
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import DateTime, Integer, String, func
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
 
-if TYPE_CHECKING:
-    from app.b_models.player_season_rank import PlayerSeasonRank
-
 
 class Player(Base):
-    """A Clash Royale player from the Path of Legend leaderboard."""
+    """Clash Royale player.
+
+    Indexed columns cover all common filter/sort operations.
+    Everything else (deck, badges, achievements, raw response) lives in JSONB.
+    """
 
     __tablename__ = "players"
 
-    # -------------------------------------------------------------------------
+    # ------------------------------------------------------------------
     # Primary key
-    # -------------------------------------------------------------------------
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    # ------------------------------------------------------------------
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
 
-    # -------------------------------------------------------------------------
-    # Identity  (tag stored WITHOUT the leading '#')
-    # -------------------------------------------------------------------------
-    tag: Mapped[str] = mapped_column(String(15), unique=True, nullable=False, index=True)
-    name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True, index=True)
+    # ------------------------------------------------------------------
+    # Identity
+    # ------------------------------------------------------------------
+    tag: Mapped[str] = mapped_column(String(20), unique=True, nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
 
-    # -------------------------------------------------------------------------
-    # Profile stats
-    # -------------------------------------------------------------------------
-    trophies: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True)
-    best_trophies: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    exp_level: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    wins: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    losses: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    battle_count: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    # ------------------------------------------------------------------
+    # Progression
+    # ------------------------------------------------------------------
+    exp_level: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    exp_points: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    total_exp_points: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    star_points: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
-    # -------------------------------------------------------------------------
-    # Path of Legend leaderboard position
-    # -------------------------------------------------------------------------
-    league_number: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    # Global rank (1 = #1 on the leaderboard)
-    league_rank: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True)
-    # Season in which the rank was captured  (e.g. '2026-03')
-    season: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+    # ------------------------------------------------------------------
+    # Trophy Road
+    # ------------------------------------------------------------------
+    trophies: Mapped[int] = mapped_column(Integer, nullable=False, default=0, index=True)
+    best_trophies: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    legacy_trophy_road_high_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
-    # -------------------------------------------------------------------------
-    # Current deck – JSON array of card objects as returned by the CR API
-    # -------------------------------------------------------------------------
-    current_deck: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    # ------------------------------------------------------------------
+    # Battle stats
+    # ------------------------------------------------------------------
+    wins: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    losses: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    battle_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    three_crown_wins: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
-    # -------------------------------------------------------------------------
-    # Raw full profile payload from /v1/players/{tag}
-    # -------------------------------------------------------------------------
-    raw_data: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    # ------------------------------------------------------------------
+    # Challenge & tournament stats
+    # ------------------------------------------------------------------
+    challenge_cards_won: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    challenge_max_wins: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    tournament_cards_won: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    tournament_battle_count: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
-    # -------------------------------------------------------------------------
-    # Housekeeping
-    # -------------------------------------------------------------------------
-    synced_at: Mapped[datetime] = mapped_column(
+    # ------------------------------------------------------------------
+    # Clan & social stats
+    # ------------------------------------------------------------------
+    war_day_wins: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    clan_cards_collected: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    donations: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    donations_received: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    total_donations: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    clan_tag: Mapped[str | None] = mapped_column(String(20), nullable=True, index=True)
+    clan_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    clan_badge_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    role: Mapped[str | None] = mapped_column(String(20), nullable=True)
+
+    # ------------------------------------------------------------------
+    # Arena
+    # ------------------------------------------------------------------
+    arena_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    arena_name: Mapped[str | None] = mapped_column(String(50), nullable=True)
+
+    # ------------------------------------------------------------------
+    # Path of Legends (ranked mode)
+    # ------------------------------------------------------------------
+    pol_league_number: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
+    pol_trophies: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    pol_rank: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
+
+    # ------------------------------------------------------------------
+    # JSONB blobs (rich data, not directly filterable)
+    # ------------------------------------------------------------------
+    current_deck: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    """List of 8 card objects: {name, id, level, maxLevel, starLevel?, evolutionLevel?, iconUrls}"""
+
+    current_favourite_card: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    """Single card object."""
+
+    league_statistics: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    """currentSeason / previousSeason / bestSeason with rank + trophies."""
+
+    badges: Mapped[list | None] = mapped_column(JSONB, nullable=True)
+    """Array of badge objects: {name, level, maxLevel, progress, target, iconUrls}."""
+
+    achievements: Mapped[list | None] = mapped_column(JSONB, nullable=True)
+    """Array of achievement objects: {name, stars, value, target, info, completionInfo}."""
+
+    raw_data: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    """Full API response, kept for forward-compatibility."""
+
+    # ------------------------------------------------------------------
+    # Audit
+    # ------------------------------------------------------------------
+    last_synced_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
     )
-
-    # -------------------------------------------------------------------------
-    # Relationships
-    # -------------------------------------------------------------------------
-    season_ranks: Mapped[list["PlayerSeasonRank"]] = relationship(
-        "PlayerSeasonRank",
-        back_populates="player",
-        cascade="all, delete-orphan",
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
     )

@@ -1,306 +1,189 @@
-<!-- Players Leaderboard — Clash Royale Theme -->
-<div class="min-h-screen font-cr py-8 px-4">
-  <div class="max-w-5xl mx-auto">
+<div class="min-h-screen px-4 py-8 max-w-4xl mx-auto">
 
-    <!-- ══ HERO HEADER ══ -->
-    <div class="text-center mb-8">
-      <h2 class="text-4xl font-black tracking-wide mb-2">
-        <span class="cr-title-gradient">🏆 Top Players</span>
-      </h2>
-      <p class="text-sm font-bold tracking-widest uppercase" style="color: #4a6a9c;">
-        Path of Legend Leaderboard · {{ total() | number }} players synced
-      </p>
+  <!-- Page header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-black cr-title-gradient mb-1">Joueurs</h1>
+    <p class="text-sm font-medium" style="color:#4a6a9c;">
+      Découvrez les meilleurs joueurs · Recherchez par nom ou tag
+    </p>
+  </div>
+
+  <!-- Search input -->
+  <div class="relative mb-8">
+    <div class="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+      <svg class="w-5 h-5" style="color:#4a6a9c;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+      </svg>
     </div>
+    <input type="text" [value]="searchQuery()" (input)="onSearchInput($event)"
+      placeholder="Rechercher par nom ou #TAG..." autocomplete="off"
+      class="w-full pl-12 pr-4 py-3 rounded-xl text-sm font-medium outline-none transition-all" style="background:#0d1e35; border:1px solid #1e3a5f; color:#c8ddf0;
+             placeholder-color:#4a6a9c;" onfocus="this.style.borderColor='#3b82f6'"
+      onblur="this.style.borderColor='#1e3a5f'" />
+    @if (searchQuery().length > 0) {
+    <button (click)="searchQuery.set(''); service.clearSearch()"
+      class="absolute inset-y-0 right-4 flex items-center text-xs font-bold transition-opacity" style="color:#4a6a9c;"
+      onmouseover="this.style.color='#7ba8d0'" onmouseout="this.style.color='#4a6a9c'">✕</button>
+    }
+  </div>
 
-    <!-- ══ SEARCH BAR ══ -->
-    <div class="flex justify-center mb-6">
-      <div class="relative w-full max-w-md">
-        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[#4a6a9c] pointer-events-none">🔍</span>
-        <input type="text" [value]="searchQuery()" (input)="onSearchInput($any($event.target).value)"
-          placeholder="Search by name or #TAG..."
-          class="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm font-bold bg-[#091628] border border-[#1c3a6a] text-[#b8cce8] placeholder-[#2a4a7a] focus:outline-none focus:border-[#2c4a8a] transition-colors" />
-        @if (searchQuery()) {
-        <button (click)="onSearchInput('')"
-          class="absolute right-3 top-1/2 -translate-y-1/2 text-[#4a6a9c] hover:text-[#b8cce8] transition-colors text-lg leading-none">
-          ✕
-        </button>
+  <!-- ── SEARCH RESULTS ───────────────────────────────────────────────────── -->
+  @if (searchQuery().length >= 2) {
+
+  @if (service.isSearching()) {
+  <app-loading-spinner message="Recherche en cours..." />
+  } @else if (service.hasSearchError()) {
+  <div class="text-center py-12" style="color:#ef4444;">
+    {{ service.error() }}
+  </div>
+  } @else {
+  @let results = service.searchResults();
+  @if (results) {
+  <div class="mb-4 flex items-center gap-3">
+    <span class="text-sm font-bold" style="color:#7ba8d0;">
+      {{ results.total }} résultat{{ results.total !== 1 ? 's' : '' }}
+    </span>
+    @if (results.source === 'api') {
+    <span class="px-2 py-0.5 rounded text-xs font-bold"
+      style="background:#1e3a5f; color:#60a5fa; border:1px solid #2563eb;">
+      CR API
+    </span>
+    }
+  </div>
+
+  @if (results.players.length === 0) {
+  <div class="text-center py-16">
+    <div class="text-4xl mb-4">🔍</div>
+    <p class="font-bold mb-1" style="color:#7ba8d0;">Aucun joueur trouvé</p>
+    <p class="text-sm" style="color:#4a6a9c;">
+      Essayez avec le tag exact (ex: #ABC123) ou un autre nom.
+    </p>
+  </div>
+  } @else {
+  <div class="space-y-2">
+    @for (player of results.players; track player.tag) {
+    <ng-container *ngTemplateOutlet="playerCard; context: { $implicit: player, rank: null }">
+    </ng-container>
+    }
+  </div>
+  }
+  }
+  }
+
+  <!-- ── TOP PLAYERS ──────────────────────────────────────────────────────── -->
+  } @else {
+
+  @if (service.isLoadingTop()) {
+  <app-loading-spinner message="Chargement du classement..." />
+  } @else if (service.hasTopError()) {
+  <div class="text-center py-12" style="color:#ef4444;">{{ service.error() }}</div>
+  } @else if (service.topPlayers().length === 0) {
+  <div class="text-center py-20">
+    <div class="text-5xl mb-4">🏆</div>
+    <p class="text-lg font-bold mb-2" style="color:#7ba8d0;">Aucun joueur en base</p>
+    <p class="text-sm" style="color:#4a6a9c;">
+      Recherchez un joueur par son tag Clash Royale (ex: #ABC123) pour l'ajouter.
+    </p>
+  </div>
+  } @else {
+  <div class="mb-4 flex items-center justify-between">
+    <span class="text-sm font-bold" style="color:#7ba8d0;">
+      Top {{ service.topTotal() }} joueurs
+    </span>
+  </div>
+  <div class="space-y-2">
+    @for (player of service.topPlayers(); track player.tag; let i = $index) {
+    <ng-container *ngTemplateOutlet="playerCard; context: { $implicit: player, rank: i + 1 }">
+    </ng-container>
+    }
+  </div>
+  }
+  }
+
+</div>
+
+<!-- ── PLAYER CARD TEMPLATE ───────────────────────────────────────────────── -->
+<ng-template #playerCard let-player let-rank="rank">
+  <button (click)="navigateToPlayer(player.tag)"
+    class="w-full text-left rounded-xl px-4 py-3 transition-all cursor-pointer group"
+    style="background:#0d1e35; border:1px solid #1e3a5f;"
+    onmouseover="this.style.borderColor='#2563eb'; this.style.background='#0f2440'"
+    onmouseout="this.style.borderColor='#1e3a5f'; this.style.background='#0d1e35'">
+    <div class="flex items-center gap-4">
+
+      <!-- Rank -->
+      @if (rank) {
+      <div class="w-8 text-center shrink-0">
+        @if (rank <= 3) { <span class="text-lg">{{ rank === 1 ? '🥇' : rank === 2 ? '🥈' : '🥉' }}</span>
+          } @else {
+          <span class="text-xs font-black" style="color:#4a6a9c;">#{{ rank }}</span>
+          }
+      </div>
+      }
+
+      <!-- Level badge -->
+      <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 font-black text-sm"
+        style="background:#1e3a5f; color:#60a5fa; border:1px solid #2563eb;">
+        {{ player.exp_level }}
+      </div>
+
+      <!-- Name + tag + clan -->
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="font-bold text-sm truncate" style="color:#c8ddf0;">{{ player.name }}</span>
+          <span class="text-xs font-mono" style="color:#4a6a9c;">#{{ player.tag }}</span>
+        </div>
+        @if (player.clan_name) {
+        <div class="text-xs mt-0.5 truncate" style="color:#4a6a9c;">
+          🏰 {{ player.clan_name }}
+        </div>
         }
       </div>
-    </div>
 
-    <!-- ══ SEARCH RESULTS MODE ══ -->
-    @if (isSearchMode()) {
-
-    @if (searchLoading()) {
-    <div class="flex justify-center py-12">
-      <app-loading-spinner />
-    </div>
-    }
-
-    @if (searchError()) {
-    <div class="text-center py-10">
-      <p class="text-4xl mb-3">⚠️</p>
-      <p class="text-sm font-bold" style="color:#c06040">{{ searchError() }}</p>
-    </div>
-    }
-
-    @if (!searchLoading() && !searchError()) {
-    @if (searchResults().length === 0) {
-    <div class="text-center py-12">
-      <p class="text-4xl mb-3">🔎</p>
-      <p class="text-sm font-bold text-[#4a6a9c]">No players found for "{{ searchQuery() }}"</p>
-    </div>
-    } @else {
-    <p class="text-xs font-bold uppercase tracking-widest text-[#2a4a7a] mb-3 text-center">
-      {{ searchResults().length }} result{{ searchResults().length > 1 ? 's' : '' }} found
-    </p>
-    <div class="flex flex-col gap-2">
-      @for (player of searchResults(); track player.tag) {
-      <a [routerLink]="['/players', player.tag]"
-        class="rounded-2xl px-4 py-3 grid grid-cols-[48px_1fr] sm:grid-cols-[56px_1fr_140px_120px_90px] gap-3 items-center no-underline bg-gradient-to-br from-[#0c1e3a] to-[#091628] border border-[#1c3a6a] hover:border-[#2c4a8a] transition-colors">
-        <span class="text-right text-sm font-black"
-          [ngClass]="(player.league_rank ?? 99) <= 3 ? 'text-[#f6c237] text-base' : 'text-[#4a6a9c]'">
-          {{ rankEmoji(player.league_rank) }}
-        </span>
-        <div>
-          <p class="text-sm font-black text-[#b8cce8]">{{ player.name ?? player.tag }}</p>
-          <p class="text-xs text-[#3a5a8a] mt-0.5">#{{ player.tag }}</p>
-        </div>
-        <div class="hidden sm:block text-right">
-          <span class="font-black text-base text-[#f6c237]">{{ player.trophies ?? '—' }}</span>
-          <span class="ml-1 text-sm">🏆</span>
-        </div>
-        <div class="hidden sm:block text-right">
-          <span class="text-sm font-bold text-[#7ba8d0]">{{ player.best_trophies ?? '—' }} 🏆</span>
-        </div>
-        <div class="hidden sm:block text-center">
-          @if (player.season) {
-          <span class="text-xs font-bold px-2 py-0.5 rounded-lg" style="background:#1c3a6a;color:#7ba8d0">
-            {{ player.season }}
-          </span>
-          }
-        </div>
-      </a>
-      }
-    </div>
-    }
-    }
-
-    } @else {
-
-    <!-- ══ LEADERBOARD MODE ══ -->
-
-    <!-- ══ SEASON FILTER ══ -->
-    @if (availableSeasons().length > 0) {
-    <div class="flex justify-center mb-6">
-      <div class="season-select-wrapper">
-        <span class="season-select-icon">📅</span>
-        <select class="season-select" (change)="setSeason($any($event.target).value || null)">
-          <option value="">All seasons</option>
-          @for (s of availableSeasons(); track s) {
-          <option [value]="s" [selected]="seasonFilter() === s">{{ s }}</option>
-          }
-        </select>
-      </div>
-    </div>
-    }
-
-    <!-- ══ LOADING ══ -->
-    @if (loading()) {
-    <div class="flex justify-center py-24">
-      <app-loading-spinner />
-    </div>
-    }
-
-    <!-- ══ ERROR ══ -->
-    @if (error()) {
-    <div class="text-center py-20">
-      <p class="text-4xl mb-3">⚠️</p>
-      <p class="text-sm font-bold" style="color:#c06040">{{ error() }}</p>
-    </div>
-    }
-
-    <!-- ══ PLAYERS LIST ══ -->
-    @if (!loading() && !error()) {
-
-    <!-- Table header (hidden on mobile) -->
-    <div
-      class="hidden sm:grid grid-cols-[56px_1fr_140px_120px_90px] gap-3 px-4 mb-2 text-xs font-bold uppercase tracking-widest"
-      style="color:#2a4a7a">
-      <span class="text-right">#</span>
-      <span>Player</span>
-      <span class="text-right">Trophies</span>
-      <span class="text-right">Best</span>
-      <span class="text-center">Season</span>
-    </div>
-
-    <div class="flex flex-col gap-2">
-      @for (player of players(); track player.tag) {
-
-      <a [routerLink]="['/players', player.tag]"
-        class="rounded-2xl px-4 py-3 grid grid-cols-[48px_1fr] sm:grid-cols-[56px_1fr_140px_120px_90px] gap-3 items-center no-underline bg-gradient-to-br from-[#0c1e3a] to-[#091628] border border-[#1c3a6a] hover:border-[#2c4a8a] transition-colors">
-
-        <!-- Rank -->
-        <span class="text-right text-sm font-black"
-          [ngClass]="(player.league_rank ?? 99) <= 3 ? 'text-[#f6c237] text-base' : 'text-[#4a6a9c]'">
-          {{ rankEmoji(player.league_rank) }}
-        </span>
-
-        <!-- Name / tag -->
-        <div>
-          <p class="text-sm font-black text-[#b8cce8]">{{ player.name ?? player.tag }}</p>
-          <p class="text-xs text-[#3a5a8a] mt-0.5">#{{ player.tag }}</p>
-        </div>
+      <!-- Stats -->
+      <div class="flex items-center gap-4 shrink-0 text-right">
 
         <!-- Trophies -->
-        <div class="hidden sm:block text-right">
-          <span class="font-black text-base text-[#f6c237]">{{ player.trophies ?? '—' }}</span>
-          <span class="ml-1 text-sm">🏆</span>
-        </div>
-
-        <!-- Best trophies -->
-        <div class="hidden sm:block text-right">
-          <span class="text-sm font-bold text-[#7ba8d0]">{{ player.best_trophies ?? '—' }} 🏆</span>
-        </div>
-
-        <!-- Season -->
-        <div class="hidden sm:block text-center">
-          @if (player.season) {
-          <span class="text-xs font-bold px-2 py-0.5 rounded-lg" style="background:#1c3a6a;color:#7ba8d0">
-            {{ player.season }}
-          </span>
+        <div>
+          <div class="text-xs font-black" style="color:#fbbf24;">
+            🏆 {{ formatNumber(player.trophies) }}
+          </div>
+          @if (player.arena_name) {
+          <div class="text-xs" style="color:#4a6a9c;">{{ player.arena_name }}</div>
           }
         </div>
 
-      </a>
+        <!-- PoL -->
+        @if (player.pol_league_number) {
+        <div>
+          <div class="text-xs font-bold" [style.color]="polLeagueColor(player.pol_league_number)">
+            {{ polLeagueLabel(player.pol_league_number) }}
+          </div>
+          @if (player.pol_rank) {
+          <div class="text-xs" style="color:#4a6a9c;">#{{ player.pol_rank }}</div>
+          }
+        </div>
+        }
 
-      }
+        <!-- Winrate -->
+        @if (player.winrate !== null) {
+        <div class="w-14 text-right">
+          <div class="text-sm font-black"
+            [style.color]="player.winrate >= 55 ? '#22c55e' : player.winrate >= 47 ? '#eab308' : '#ef4444'">
+            {{ player.winrate }}%
+          </div>
+          <div class="text-xs" style="color:#4a6a9c;">WR</div>
+        </div>
+        }
+
+        <!-- Chevron -->
+        <svg class="w-4 h-4 transition-transform group-hover:translate-x-0.5" style="color:#1e3a5f;" fill="none"
+          viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </div>
+
     </div>
-
-    <!-- ══ PAGINATION ══ -->
-    @if (total() > limit) {
-    <div class="flex items-center justify-center gap-4 mt-8">
-      <button (click)="prevPage()" [disabled]="!hasPrev()"
-        class="px-4 py-2 rounded-xl text-sm font-bold transition-all bg-[#0c1e3a] border border-[#1c3a6a] text-[#7ba8d0] hover:border-[#f6c237]/33 hover:text-[#f6c237] disabled:opacity-35 disabled:cursor-not-allowed">
-        ← Prev
-      </button>
-      <span class="text-sm font-bold text-[#4a6a9c]">
-        Page {{ currentPage() }} / {{ totalPages() }}
-      </span>
-      <button (click)="nextPage()" [disabled]="!hasNext()"
-        class="px-4 py-2 rounded-xl text-sm font-bold transition-all bg-[#0c1e3a] border border-[#1c3a6a] text-[#7ba8d0] hover:border-[#f6c237]/33 hover:text-[#f6c237] disabled:opacity-35 disabled:cursor-not-allowed">
-        Next →
-      </button>
-    </div>
-    }
-
-    }<!-- end @if !loading -->
-
-    }<!-- end @else leaderboard mode -->
-
-  </div>
-</div>
-@if (availableSeasons().length > 0) {
-<div class="flex justify-center mb-6">
-  <div class="season-select-wrapper">
-    <span class="season-select-icon">📅</span>
-    <select class="season-select" (change)="setSeason($any($event.target).value || null)">
-      <option value="">All seasons</option>
-      @for (s of availableSeasons(); track s) {
-      <option [value]="s" [selected]="seasonFilter() === s">{{ s }}</option>
-      }
-    </select>
-  </div>
-</div>
-}
-
-<!-- ══ LOADING ══ -->
-@if (loading()) {
-<div class="flex justify-center py-24">
-  <app-loading-spinner />
-</div>
-}
-
-<!-- ══ ERROR ══ -->
-@if (error()) {
-<div class="text-center py-20">
-  <p class="text-4xl mb-3">⚠️</p>
-  <p class="text-sm font-bold" style="color:#c06040">{{ error() }}</p>
-</div>
-}
-
-<!-- ══ PLAYERS LIST ══ -->
-@if (!loading() && !error()) {
-
-<!-- Table header (hidden on mobile) -->
-<div
-  class="hidden sm:grid grid-cols-[56px_1fr_140px_120px_90px] gap-3 px-4 mb-2 text-xs font-bold uppercase tracking-widest"
-  style="color:#2a4a7a">
-  <span class="text-right">#</span>
-  <span>Player</span>
-  <span class="text-right">Trophies</span>
-  <span class="text-right">Best</span>
-  <span class="text-center">Season</span>
-</div>
-
-<div class="flex flex-col gap-2">
-  @for (player of players(); track player.tag) {
-
-  <a [routerLink]="['/players', player.tag]"
-    class="rounded-2xl px-4 py-3 grid grid-cols-[48px_1fr] sm:grid-cols-[56px_1fr_140px_120px_90px] gap-3 items-center no-underline bg-gradient-to-br from-[#0c1e3a] to-[#091628] border border-[#1c3a6a] hover:border-[#2c4a8a] transition-colors">
-
-    <!-- Rank -->
-    <span class="text-right text-sm font-black"
-      [ngClass]="(player.league_rank ?? 99) <= 3 ? 'text-[#f6c237] text-base' : 'text-[#4a6a9c]'">
-      {{ rankEmoji(player.league_rank) }}
-    </span>
-
-    <!-- Name / tag -->
-    <div>
-      <p class="text-sm font-black text-[#b8cce8]">{{ player.name ?? player.tag }}</p>
-      <p class="text-xs text-[#3a5a8a] mt-0.5">#{{ player.tag }}</p>
-    </div>
-
-    <!-- Trophies -->
-    <div class="hidden sm:block text-right">
-      <span class="font-black text-base text-[#f6c237]">{{ player.trophies ?? '—' }}</span>
-      <span class="ml-1 text-sm">🏆</span>
-    </div>
-
-    <!-- Best trophies -->
-    <div class="hidden sm:block text-right">
-      <span class="text-sm font-bold text-[#7ba8d0]">{{ player.best_trophies ?? '—' }} 🏆</span>
-    </div>
-
-    <!-- Season -->
-    <div class="hidden sm:block text-center">
-      @if (player.season) {
-      <span class="text-xs font-bold px-2 py-0.5 rounded-lg" style="background:#1c3a6a;color:#7ba8d0">
-        {{ player.season }}
-      </span>
-      }
-    </div>
-
-  </a>
-
-  }
-</div>
-
-<!-- ══ PAGINATION ══ -->
-@if (total() > limit) {
-<div class="flex items-center justify-center gap-4 mt-8">
-  <button (click)="prevPage()" [disabled]="!hasPrev()"
-    class="px-4 py-2 rounded-xl text-sm font-bold transition-all bg-[#0c1e3a] border border-[#1c3a6a] text-[#7ba8d0] hover:border-[#f6c237]/33 hover:text-[#f6c237] disabled:opacity-35 disabled:cursor-not-allowed">
-    ← Prev
   </button>
-  <span class="text-sm font-bold text-[#4a6a9c]">
-    Page {{ currentPage() }} / {{ totalPages() }}
-  </span>
-  <button (click)="nextPage()" [disabled]="!hasNext()"
-    class="px-4 py-2 rounded-xl text-sm font-bold transition-all bg-[#0c1e3a] border border-[#1c3a6a] text-[#7ba8d0] hover:border-[#f6c237]/33 hover:text-[#f6c237] disabled:opacity-35 disabled:cursor-not-allowed">
-    Next →
-  </button>
-</div>
-}
-
-}<!-- end @if !loading -->
+</ng-template>

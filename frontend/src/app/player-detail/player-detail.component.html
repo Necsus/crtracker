@@ -1,156 +1,214 @@
-<!-- Player Detail — Clash Royale Theme -->
-<div class="min-h-screen font-cr py-8 px-4">
-  <div class="max-w-4xl mx-auto">
+@if (service.isLoadingPlayer()) {
+<div class="min-h-screen flex items-center justify-center">
+  <app-loading-spinner message="Chargement du profil..." [size]="'lg'" />
+</div>
+} @else if (service.hasPlayerError()) {
+<div class="min-h-screen flex flex-col items-center justify-center gap-4">
+  <div class="text-5xl">😞</div>
+  <p class="font-bold" style="color:#ef4444;">{{ service.error() }}</p>
+  <a routerLink="/players" class="text-sm font-bold" style="color:#60a5fa;">
+    ← Retour aux joueurs
+  </a>
+</div>
+} @else {
+@let player = service.selectedPlayer();
+@if (player) {
 
-    <!-- ══ BACK LINK ══ -->
-    <a routerLink="/players"
-      class="text-[#4a6a9c] hover:text-[#f6c237] transition-colors inline-flex items-center gap-2 mb-8 text-sm font-bold">
-      ← Back to Leaderboard
-    </a>
+<div class="min-h-screen px-4 py-8 max-w-3xl mx-auto">
 
-    <!-- ══ LOADING ══ -->
-    @if (loading()) {
-    <div class="flex justify-center py-32">
-      <app-loading-spinner />
-    </div>
-    }
+  <!-- Back link -->
+  <a routerLink="/players" class="inline-flex items-center gap-1 text-sm font-bold mb-6 transition-colors"
+    style="color:#4a6a9c;" onmouseover="this.style.color='#7ba8d0'" onmouseout="this.style.color='#4a6a9c'">
+    ← Joueurs
+  </a>
 
-    <!-- ══ ERROR ══ -->
-    @if (error()) {
-    <div class="text-center py-32">
-      <p class="text-5xl mb-4">⚠️</p>
-      <p class="text-lg font-bold" style="color: #c06040;">{{ error() }}</p>
-      <a routerLink="/players"
-        class="text-[#4a6a9c] hover:text-[#f6c237] transition-colors inline-block mt-6 text-sm font-bold px-5 py-2 rounded-xl">
-        ← Return to Leaderboard
-      </a>
-    </div>
-    }
+  <!-- ── Profile header ──────────────────────────────────────────────── -->
+  <div class="rounded-2xl p-6 mb-6" style="background:#0d1e35; border:1px solid #1e3a5f;">
+    <div class="flex items-start gap-4">
 
-    <!-- ══ PLAYER CONTENT ══ -->
-    @if (!loading() && !error() && player()) {
-    @let p = player()!;
+      <!-- Level badge -->
+      <div class="w-16 h-16 rounded-xl flex flex-col items-center justify-center shrink-0 font-black"
+        style="background:#1e3a5f; border:2px solid #2563eb;">
+        <span class="text-xl" style="color:#60a5fa;">{{ player.exp_level }}</span>
+        <span class="text-xs" style="color:#4a6a9c;">LVL</span>
+      </div>
 
-    <!-- ── HERO BANNER ───────────────────────────────── -->
-    <div
-      class="rounded-2xl p-6 mb-6 bg-gradient-to-br from-[#0c1e3a] to-[#091628] border border-[#1c3a6a] shadow-[0_4px_24px_rgba(0,0,0,0.4)]">
-      <div class="flex flex-col sm:flex-row items-center sm:items-start gap-4">
-
-        <!-- Avatar placeholder -->
-        <div class="shrink-0 w-20 h-20 rounded-2xl flex items-center justify-center text-4xl"
-          style="background: #0a1828; border: 2px solid #1c3a6a;">
-          🏆
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-3 flex-wrap">
+          <h1 class="text-2xl font-black" style="color:#c8ddf0;">{{ player.name }}</h1>
+          <span class="font-mono text-sm px-2 py-0.5 rounded"
+            style="background:#0a1628; color:#4a6a9c; border:1px solid #1e3a5f;">
+            #{{ player.tag }}
+          </span>
         </div>
 
-        <!-- Player info -->
-        <div class="flex-1 text-center sm:text-left">
-          <h1 class="text-3xl font-black tracking-wide mb-1 cr-title-gradient">{{ p.name ?? p.tag }}</h1>
-          <p class="text-sm font-mono mb-3" style="color: #4a6a9c;">#{{ p.tag }}</p>
-
-          <div class="flex flex-wrap justify-center sm:justify-start gap-2">
-            @if (p.league_rank) {
-            <span
-              class="text-xs font-bold px-2.5 py-1 rounded-full bg-[#f6c237]/12 border border-[#f6c237]/33 text-[#f6c237]">
-              🥇 Rank #{{ p.league_rank }}</span>
-            }
-            @if (p.season) {
-            <span class="text-xs font-bold px-2.5 py-1 rounded-full" style="background:#1c3a6a; color:#a8bcd8;">
-              📅 {{ p.season }}
-            </span>
-            }
-            @if (p.exp_level) {
-            <span class="text-xs font-bold px-2.5 py-1 rounded-full" style="background:#1c3a6a; color:#a8bcd8;">
-              ⭐ Level {{ p.exp_level }}
-            </span>
-            }
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── STATS GRID ────────────────────────────────── -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-
-      <div class="rounded-xl p-4 text-center bg-[#0c1e3a] border border-[#1c3a6a]">
-        <p class="text-xs font-bold uppercase tracking-widest mb-1 text-[#4a6a9c]">Trophies</p>
-        <p class="text-2xl font-black" style="color:#f6c237;">{{ p.trophies ?? '—' }}</p>
-      </div>
-
-      <div class="rounded-xl p-4 text-center bg-[#0c1e3a] border border-[#1c3a6a]">
-        <p class="text-xs font-bold uppercase tracking-widest mb-1 text-[#4a6a9c]">Best</p>
-        <p class="text-2xl font-black" style="color:#e8a020;">{{ p.best_trophies ?? '—' }}</p>
-      </div>
-
-      <div class="rounded-xl p-4 text-center bg-[#0c1e3a] border border-[#1c3a6a]">
-        <p class="text-xs font-bold uppercase tracking-widest mb-1 text-[#4a6a9c]">Wins</p>
-        <p class="text-2xl font-black" style="color:#40c080;">{{ p.wins ?? '—' }}</p>
-      </div>
-
-      <div class="rounded-xl p-4 text-center bg-[#0c1e3a] border border-[#1c3a6a]">
-        <p class="text-xs font-bold uppercase tracking-widest mb-1 text-[#4a6a9c]">Losses</p>
-        <p class="text-2xl font-black" style="color:#c06040;">{{ p.losses ?? '—' }}</p>
-      </div>
-
-    </div>
-
-    <!-- ── WIN RATE ──────────────────────────────────── -->
-    @if (p.wins !== null && p.losses !== null && (p.wins + p.losses) > 0) {
-    <div class="rounded-2xl p-5 mb-6 bg-gradient-to-br from-[#0c1e3a] to-[#091628] border border-[#1c3a6a]">
-      <p class="text-sm font-bold uppercase tracking-widest text-[#4a6a9c] mb-3">📊 Win Rate</p>
-      <div class="flex items-center gap-4">
-        <div class="flex-1 h-3 rounded-full overflow-hidden" style="background:#1c3a6a;">
-          <div class="h-full rounded-full transition-all" [style.width.%]="winRate(p)"
-            [style.background]="winRate(p) >= 50 ? '#40c080' : '#c06040'">
-          </div>
-        </div>
-        <span class="font-black text-lg" [style.color]="winRate(p) >= 50 ? '#40c080' : '#c06040'">
-          {{ winRate(p) | number:'1.1-1' }}%
-        </span>
-      </div>
-      <p class="text-xs mt-2" style="color:#4a6a9c;">
-        {{ p.wins }} W / {{ p.losses }} L
-        @if (p.battle_count) { · {{ p.battle_count }} total battles }
-      </p>
-    </div>
-    }
-
-    <!-- ── CURRENT DECK ───────────────────────────────── -->
-    @if (p.current_deck && p.current_deck.length > 0) {
-    <div class="rounded-2xl p-5 bg-gradient-to-br from-[#0c1e3a] to-[#091628] border border-[#1c3a6a]">
-      <p class="text-sm font-bold uppercase tracking-widest text-[#4a6a9c] mb-4">🃾 Current Deck</p>
-      <div class="grid grid-cols-4 sm:grid-cols-8 gap-3">
-        @for (card of p.current_deck; track card.name) {
-        <div class="flex flex-col items-center gap-1">
-          @if (card.icon_url) {
-          <img [src]="card.icon_url" [alt]="card.name" />
-          } @else {
-          <div class="w-14 h-14 rounded-lg flex items-center justify-center text-2xl"
-            style="background:#091628; border:1px solid #1c3a6a;">🃽️</div>
+        <div class="flex flex-wrap gap-x-4 gap-y-1 mt-2">
+          @if (player.arena_name) {
+          <span class="text-sm" style="color:#7ba8d0;">{{ player.arena_name }}</span>
           }
-          <span class="text-xs font-bold text-center text-[#7ba8d0] truncate w-14">{{ card.name }}</span>
-          <div class="flex gap-1 items-center">
-            @if (card.elixir_cost !== null) {
-            <span
-              class="text-xs font-black px-1.5 py-0.5 rounded text-[#c070f0] bg-[#8030e0]/15 border border-[#8030e0]/30">⬡
-              {{ card.elixir_cost }}</span>
+          @if (player.clan_name) {
+          <span class="text-sm" style="color:#7ba8d0;">
+            🏰 {{ player.clan_name }}
+            @if (player.role) {
+            · <span style="color:#4a6a9c;">{{ roleLabel(player.role) }}</span>
             }
-            @if (card.level !== null) {
-            <span class="text-xs font-bold text-[#f6c237]">Lv{{ card.level }}</span>
-            }
-          </div>
+          </span>
+          }
         </div>
-        }
       </div>
+    </div>
+  </div>
 
-      <!-- Average elixir -->
-      @if (avgElixir(p) > 0) {
-      <p class="text-xs mt-4 text-right font-bold" style="color:#4a6a9c;">
-        Avg elixir: <span style="color:#b030e0;">{{ avgElixir(p) | number:'1.1-1' }}</span>
-      </p>
+  <!-- ── Key stats ───────────────────────────────────────────────────── -->
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+
+    <div class="rounded-xl p-4 text-center" style="background:#0d1e35; border:1px solid #1e3a5f;">
+      <div class="text-2xl font-black" style="color:#fbbf24;">
+        {{ formatNumber(player.trophies) }}
+      </div>
+      <div class="text-xs mt-1" style="color:#4a6a9c;">🏆 Trophées</div>
+    </div>
+
+    <div class="rounded-xl p-4 text-center" style="background:#0d1e35; border:1px solid #1e3a5f;">
+      <div class="text-2xl font-black" [style.color]="winrateColor(player.winrate)">
+        {{ player.winrate !== null ? player.winrate + '%' : '—' }}
+      </div>
+      <div class="text-xs mt-1" style="color:#4a6a9c;">⚔️ Win Rate</div>
+    </div>
+
+    <div class="rounded-xl p-4 text-center" style="background:#0d1e35; border:1px solid #1e3a5f;">
+      <div class="text-2xl font-black" style="color:#c8ddf0;">
+        {{ formatNumber(player.battle_count) }}
+      </div>
+      <div class="text-xs mt-1" style="color:#4a6a9c;">🎮 Batailles</div>
+    </div>
+
+    <div class="rounded-xl p-4 text-center" style="background:#0d1e35; border:1px solid #1e3a5f;">
+      @if (player.pol_league_number) {
+      <div class="text-lg font-black" style="color:#a78bfa;">
+        {{ polLeagueLabel(player.pol_league_number) }}
+      </div>
+      @if (player.pol_rank) {
+      <div class="text-xs mt-0.5 font-bold" style="color:#4a6a9c;">#{{ player.pol_rank }}</div>
+      }
+      } @else {
+      <div class="text-2xl font-black" style="color:#4a6a9c;">—</div>
+      }
+      <div class="text-xs mt-1" style="color:#4a6a9c;">⚡ Path of Legends</div>
+    </div>
+
+  </div>
+
+  <!-- ── Battle breakdown ────────────────────────────────────────────── -->
+  <div class="rounded-2xl p-5 mb-6" style="background:#0d1e35; border:1px solid #1e3a5f;">
+    <h2 class="text-sm font-black uppercase tracking-widest mb-4" style="color:#4a6a9c;">
+      Statistiques de combat
+    </h2>
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-y-4 gap-x-6 text-sm">
+      <div>
+        <div class="font-black text-lg" style="color:#22c55e;">{{ formatNumber(player.wins) }}</div>
+        <div style="color:#4a6a9c;">Victoires</div>
+      </div>
+      <div>
+        <div class="font-black text-lg" style="color:#ef4444;">{{ formatNumber(player.losses) }}</div>
+        <div style="color:#4a6a9c;">Défaites</div>
+      </div>
+      <div>
+        <div class="font-black text-lg" style="color:#c8ddf0;">{{ formatNumber(player.three_crown_wins) }}</div>
+        <div style="color:#4a6a9c;">Victoires 3 couronnes</div>
+      </div>
+      @if (player.challenge_max_wins !== null) {
+      <div>
+        <div class="font-black text-lg" style="color:#fbbf24;">{{ player.challenge_max_wins }}</div>
+        <div style="color:#4a6a9c;">Max wins challenge</div>
+      </div>
+      }
+      @if (player.best_trophies) {
+      <div>
+        <div class="font-black text-lg" style="color:#fbbf24;">{{ formatNumber(player.best_trophies) }}</div>
+        <div style="color:#4a6a9c;">Record trophées</div>
+      </div>
+      }
+      @if (player.total_donations) {
+      <div>
+        <div class="font-black text-lg" style="color:#60a5fa;">{{ formatNumber(player.total_donations) }}</div>
+        <div style="color:#4a6a9c;">Dons totaux</div>
+      </div>
       }
     </div>
-    }
-
-    }<!-- end @if player() -->
   </div>
+
+  <!-- ── Current deck ────────────────────────────────────────────────── -->
+  @if (player.current_deck && player.current_deck.length > 0) {
+  <div class="rounded-2xl p-5 mb-6" style="background:#0d1e35; border:1px solid #1e3a5f;">
+    <h2 class="text-sm font-black uppercase tracking-widest mb-4" style="color:#4a6a9c;">
+      Deck actuel
+    </h2>
+    <div class="grid grid-cols-4 gap-2">
+      @for (card of player.current_deck; track card.id) {
+      <div class="rounded-lg p-2 text-center" style="background:#0a1628; border:1px solid #1e3a5f;">
+        @if (card.iconUrls?.medium) {
+        <img [src]="card.iconUrls!.medium" [alt]="card.name" class="w-full h-auto rounded mb-1" />
+        }
+        <div class="text-xs font-bold leading-tight" style="color:#7ba8d0;">
+          {{ card.name }}
+        </div>
+        @if (card.level) {
+        <div class="text-xs mt-0.5" style="color:#4a6a9c;">Lv. {{ card.level }}</div>
+        }
+      </div>
+      }
+    </div>
+  </div>
+  }
+
+  <!-- ── League statistics ────────────────────────────────────────────── -->
+  @if (player.league_statistics) {
+  @let stats = player.league_statistics;
+  <div class="rounded-2xl p-5 mb-6" style="background:#0d1e35; border:1px solid #1e3a5f;">
+    <h2 class="text-sm font-black uppercase tracking-widest mb-4" style="color:#4a6a9c;">
+      Saisons Trophy Road
+    </h2>
+    <div class="space-y-3">
+      @if (stats['currentSeason']) {
+      <div class="flex justify-between items-center text-sm">
+        <span style="color:#7ba8d0;">Saison en cours</span>
+        <div class="text-right">
+          <span class="font-bold" style="color:#fbbf24;">
+            {{ formatNumber(stats['currentSeason']['trophies']) }} 🏆
+          </span>
+          @if (stats['currentSeason']['rank']) {
+          <span class="ml-3" style="color:#4a6a9c;">#{{ stats['currentSeason']['rank'] }}</span>
+          }
+        </div>
+      </div>
+      }
+      @if (stats['previousSeason']) {
+      <div class="flex justify-between items-center text-sm">
+        <span style="color:#4a6a9c;">Saison précédente</span>
+        <span class="font-bold" style="color:#c8ddf0;">
+          {{ formatNumber(stats['previousSeason']['bestTrophies'] ?? stats['previousSeason']['trophies']) }} 🏆
+        </span>
+      </div>
+      }
+      @if (stats['bestSeason']) {
+      <div class="flex justify-between items-center text-sm">
+        <span style="color:#4a6a9c;">Meilleure saison</span>
+        <span class="font-bold" style="color:#22c55e;">
+          {{ formatNumber(stats['bestSeason']['trophies']) }} 🏆
+        </span>
+      </div>
+      }
+    </div>
+  </div>
+  }
+
+  <!-- Footer -->
+  <div class="text-center text-xs" style="color:#1e3a5f;">
+    Dernière synchro : {{ player.last_synced_at | date:'dd/MM/yyyy HH:mm' }}
+  </div>
+
 </div>
+
+}
+}

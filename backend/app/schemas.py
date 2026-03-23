@@ -1,537 +1,70 @@
-"""Pydantic schemas for request/response validation.
-
-These schemas define the API contract and are automatically
-documented in OpenAPI/Swagger.
-"""
+"""Pydantic schemas for request/response validation."""
 
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 
-from pydantic import BaseModel, Field, field_validator
-
-
-# =============================================================================
-# CARD SCHEMAS
-# =============================================================================
-
-
-class Card(BaseModel):
-    """Represents a single Clash Royale card."""
-
-    id: str = Field(..., description="Unique card identifier (e.g., 'golem')")
-    name: str = Field(..., description="Card display name")
-    elixir: int = Field(..., ge=0, description="Elixir cost")
-    rarity: Literal["common", "rare", "epic", "legendary", "champion"] = Field(
-        ..., description="Card rarity"
-    )
-    type: Literal["troop", "spell", "building"] | None = Field(
-        None, description="Card type"
-    )
-    icon_url: str | None = Field(None, description="URL to card icon image")
-    # Evolved cards have different gameplay mechanics (e.g. Evolved Skeletons)
-    evolved: bool = Field(False, description="True if this is an evolved card")
-    # Golden skin is cosmetic only — no gameplay impact
-    golden: bool = Field(False, description="True if this card has a golden skin")
-
-
-# =============================================================================
-# CARD API RESPONSE SCHEMA
-# =============================================================================
-
-
-class CardResponse(BaseModel):
-    """Public response schema for a single Clash Royale card.
-
-    Maps Card DB model fields to the canonical API contract
-    (lowercase rarity/type, renamed elixir/icon fields).
-    """
-
-    id: str = Field(..., description="CR API card ID as string")
-    name: str = Field(..., description="Card display name")
-    elixir: int = Field(..., ge=0, description="Elixir cost")
-    rarity: Literal["common", "rare", "epic", "legendary", "champion"] = Field(
-        ..., description="Card rarity"
-    )
-    type: Literal["troop", "spell", "building"] | None = Field(
-        None, description="Card type"
-    )
-    icon_url: str | None = Field(None, description="URL to card icon image")
-    description: str | None = Field(None, description="In-game card description")
-    evolved: bool = Field(False, description="True if this is an evolved card")
-    golden: bool = Field(False, description="True if this card has a golden skin")
-
-    model_config = {"from_attributes": True}
-
-
-# =============================================================================
-# DECK SCHEMAS
-# =============================================================================
-
-
-class DeckCreate(BaseModel):
-    """Schema for creating a new deck."""
-
-    name: str = Field(..., min_length=1, max_length=100, description="Deck name")
-    archetype: str = Field(
-        ..., min_length=1, max_length=50, description="Archetype (e.g., 'beatdown')"
-    )
-    cards: list[Card] = Field(..., min_length=8, max_length=8, description="Exactly 8 cards")
-    player_tag: str | None = Field(
-        None,
-        min_length=8,
-        max_length=10,
-        description="Player tag if imported from profile",
-    )
-
-
-class DeckResponse(BaseModel):
-    """Schema for deck response."""
-
-    id: int = Field(..., description="Deck database ID")
-    name: str = Field(..., description="Deck name")
-    # Legacy free-text archetype (always present for backward compat)
-    archetype: str = Field(..., description="Legacy archetype label")
-    # Resolved archetype ID from the curated catalogue (None if not yet classified)
-    archetype_id: int | None = Field(None, description="FK to archetypes table")
-    # SHA-1 fingerprint of sorted card IDs
-    deck_key: str | None = Field(None, description="SHA-1 deck fingerprint")
-    cards: list[Card] = Field(..., description="8 cards in the deck")
-    avg_elixir: float = Field(..., description="Average elixir cost")
-    created_at: datetime = Field(..., description="Creation timestamp")
-    updated_at: datetime | None = Field(None, description="Last update timestamp")
-
-
-class DeckListItem(BaseModel):
-    """Lightweight schema for deck list views."""
-
-    id: int
-    name: str
-    archetype: str
-    avg_elixir: float
-    card_count: int = Field(..., description="Always 8")
-    cards: list[Card] = Field(default_factory=list, description="8 cards in the deck")
-
-
-# =============================================================================
-# MATCHUP STATISTICS SCHEMAS
-# =============================================================================
-
-
-class MatchupStats(BaseModel):
-    """Statistics for a deck vs deck matchup."""
-
-    opponent_deck_id: int = Field(..., description="Opponent deck ID")
-    opponent_deck_name: str = Field(..., description="Opponent deck name")
-    opponent_archetype: str = Field(..., description="Opponent archetype")
-    winrate: float = Field(
-        ..., ge=0, le=100, description="Win percentage (0-100)"
-    )
-    wins: int = Field(0, ge=0, description="Number of wins in this matchup")
-    losses: int = Field(0, ge=0, description="Number of losses in this matchup")
-    sample_size: int = Field(
-        ..., ge=0, description="Number of recorded matches"
-    )
-    top_1000_winrate: float = Field(
-        ...,
-        ge=0,
-        le=100,
-        description="Winrate in Top 1000 ladder matches",
-    )
-    last_updated: datetime = Field(..., description="Last stats update")
-
-
-class DeckStatsResponse(BaseModel):
-    """Complete statistics for a deck."""
-
-    deck: DeckResponse
-    matchups: list[MatchupStats] = Field(
-        ..., description="List of matchup statistics vs meta decks"
-    )
-    global_winrate: float = Field(
-        ...,
-        ge=0,
-        le=100,
-        description="Overall winrate across all matchups",
-    )
-    wins: int = Field(0, ge=0, description="Total wins")
-    losses: int = Field(0, ge=0, description="Total losses")
-    meta_share: float = Field(
-        ...,
-        ge=0,
-        le=100,
-        description="Meta usage percentage",
-    )
-
-
-# =============================================================================
-# BATTLE SCHEMAS
-# =============================================================================
-
-
-class BattleCardItem(BaseModel):
-    """A single card as stored in a battle log."""
-
-    id: int = Field(..., description="CR numeric card ID")
-    name: str
-    elixir_cost: int | None = None
-    rarity: str | None = None
-    level: int | None = None
-    icon_url: str | None = None
-
-
-class BattleResponse(BaseModel):
-    """A single battle from the battles table."""
-
-    id: int
-    battle_key: str
-    battle_time: datetime
-    battle_type: str | None = None
-    game_mode_name: str | None = None
-    arena_name: str | None = None
-
-    team1_tag: str
-    team1_name: str | None = None
-    team1_crowns: int | None = None
-    team1_starting_trophies: int | None = None
-    team1_trophy_change: int | None = None
-    team1_cards: list[BattleCardItem] = Field(default_factory=list)
-
-    team2_tag: str
-    team2_name: str | None = None
-    team2_crowns: int | None = None
-    team2_starting_trophies: int | None = None
-    team2_trophy_change: int | None = None
-    team2_cards: list[BattleCardItem] = Field(default_factory=list)
-
-    winner_tag: str | None = None
-
-    model_config = {"from_attributes": True}
-
-
-class BattleListResponse(BaseModel):
-    """Paginated list of battles."""
-
-    items: list[BattleResponse]
-    total: int
-    offset: int
-    limit: int
-
-
-# =============================================================================
-# PLAYER SCHEMAS
-# =============================================================================
-
-
-class PlayerCardItem(BaseModel):
-    """A card as returned by the CR API inside a player's currentDeck."""
-
-    id: int | None = None
-    name: str
-    elixir_cost: int | None = None
-    rarity: str | None = None
-    level: int | None = None
-    icon_url: str | None = None
-
-
-class PlayerResponse(BaseModel):
-    """Full player profile as stored in the players table."""
-
-    tag: str
-    name: str | None = None
-    trophies: int | None = None
-    best_trophies: int | None = None
-    exp_level: int | None = None
-    wins: int | None = None
-    losses: int | None = None
-    battle_count: int | None = None
-    league_number: int | None = None
-    league_rank: int | None = None
-    season: str | None = None
-    current_deck: list[PlayerCardItem] = Field(default_factory=list)
-
-    model_config = {"from_attributes": True}
-
-
-class PlayerListItem(BaseModel):
-    """Lightweight player representation for leaderboard list views."""
-
-    tag: str
-    name: str | None = None
-    trophies: int | None = None
-    best_trophies: int | None = None
-    league_number: int | None = None
-    league_rank: int | None = None
-    season: str | None = None
-
-    model_config = {"from_attributes": True}
-
-
-class PlayerListResponse(BaseModel):
-    """Paginated list of players."""
-
-    items: list[PlayerListItem]
-    total: int
-    offset: int
-    limit: int
-
-
-# =============================================================================
-# SEASON SCHEMAS
-# =============================================================================
-
-
-class SeasonResponse(BaseModel):
-    """A Clash Royale season with its exact time boundaries."""
-
-    id: int
-    name: str = Field(..., description="Label e.g. '2026-03'")
-    start_at: datetime = Field(..., description="Exact season start (tz-aware)")
-    end_at: datetime | None = Field(None, description="Exact season end, NULL if active")
-    created_at: datetime
-
-    model_config = {"from_attributes": True}
-
-
-class SeasonCreate(BaseModel):
-    """Payload to create a new season."""
-
-    name: str = Field(..., min_length=4, max_length=10, description="Label e.g. '2026-03'")
-    start_at: datetime = Field(..., description="Exact season start (tz-aware)")
-    end_at: datetime | None = Field(None, description="Exact season end, NULL if active")
-
-
-class PlayerSeasonRankResponse(BaseModel):
-    """Rank of a player for a specific season."""
-
-    id: int
-    player_id: int
-    season_id: int
-    league_rank: int | None = None
-    league_number: int | None = None
-    trophies: int | None = None
-    synced_at: datetime
-
-    model_config = {"from_attributes": True}
-
-
-class PlayerSeasonRankWithSeason(PlayerSeasonRankResponse):
-    """Rank entry enriched with its season metadata."""
-
-    season: SeasonResponse
-
-
-class SeasonLeaderboard(BaseModel):
-    """Paginated leaderboard for a specific season."""
-
-    season: SeasonResponse
-    items: list[PlayerSeasonRankResponse]
-    total: int
-    offset: int
-    limit: int
-
-
-# =============================================================================
-# ORACLE SCHEMAS
-# =============================================================================
-
-
-class OracleAdviceCategory(BaseModel):
-    """Category of tactical advice."""
-
-    name: str = Field(..., description="Category name (e.g., 'Early Game')")
-    priority: Literal["critical", "high", "medium", "low"] = Field(
-        ..., description="Advice priority level"
-    )
-
-
-class OracleAdvice(BaseModel):
-    """Single tactical advice from the Oracle."""
-
-    id: str = Field(..., description="Unique advice identifier")
-    category: OracleAdviceCategory = Field(..., description="Advice category")
-    title: str = Field(..., description="Short descriptive title")
-    description: str = Field(..., description="Detailed tactical advice")
-    cards_involved: list[str] = Field(
-        ..., description="Card IDs relevant to this advice"
-    )
-    timing: str | None = Field(
-        None,
-        description="When to apply (e.g., 'At 2x elixir')",
-    )
-
-
-class OracleMatchupResponse(BaseModel):
-    """Complete Oracle analysis for a matchup."""
-
-    player_deck: DeckResponse
-    opponent_deck: DeckResponse
-    winrate_prediction: float = Field(
-        ..., ge=0, le=100, description="Predicted winrate"
-    )
-    difficulty: Literal["favorable", "even", "unfavorable", "hard"] = Field(
-        ..., description="Matchup difficulty"
-    )
-    advice: list[OracleAdvice] = Field(
-        ..., description="Exhaustive list of tactical advice"
-    )
-    generated_at: datetime = Field(default_factory=datetime.now)
-    source: Literal["cached", "llm", "mock"] = Field(
-        ..., description="Advice source"
-    )
-
-
-class OracleRequest(BaseModel):
-    """Request for Oracle analysis."""
-
-    player_deck_id: int = Field(..., description="Your deck ID")
-    opponent_deck_id: int = Field(..., description="Opponent deck ID")
-    force_refresh: bool = Field(
-        default=False,
-        description="Force regeneration instead of using cache",
-    )
-
-
-# =============================================================================
-# PLAYER SCHEMAS
-# =============================================================================
-
-
-class PlayerProfile(BaseModel):
-    """Clash Royale player profile."""
-
-    tag: str = Field(..., description="Player tag")
-    name: str = Field(..., description="Player name")
-    trophies: int = Field(..., ge=0, description="Current trophies")
-    best_trophies: int = Field(..., ge=0, description="Best trophies")
-    arena: str = Field(..., description="Current arena/league")
-    wins: int = Field(..., ge=0, description="Total wins")
-    losses: int = Field(..., ge=0, description="Total losses")
-    current_deck: list[Card] | None = Field(None, description="Current battle deck")
-
-
-class PlayerImportResponse(BaseModel):
-    """Response after importing player deck."""
-
-    player: PlayerProfile
-    deck: DeckResponse | None = Field(None, description="Imported deck if available")
-    message: str = Field(..., description="Status message")
-
-
-# =============================================================================
-# ARCHETYPE SCHEMAS
-# =============================================================================
-
-# Valid play styles — matches Archetype.play_style column values
-ArchetypePlayStyle = Literal[
-    "CYCLE", "BEATDOWN", "CONTROL", "BRIDGE_SPAM", "SIEGE", "HYBRID"
-]
-
-# Valid meta statuses — matches DeckMetaStatus.status column values
-MetaStatusValue = Literal[
-    "DOMINANT", "VIABLE", "ANTI_META", "OFF_META", "UNCLASSIFIED"
-]
-
-
-class ArchetypeCreate(BaseModel):
-    """Schema for creating a new curated archetype."""
-
-    name: str = Field(..., min_length=1, max_length=100)
-    win_condition: str = Field(..., min_length=1, max_length=50)
-    play_style: ArchetypePlayStyle
-    is_timeless: bool = Field(False)
-    variant_of_id: int | None = Field(None, description="Parent archetype ID")
-    # Ordered list of card slugs required to match this archetype
-    core_cards: list[str] = Field(
-        ...,
-        min_length=1,
-        description="Card slugs that MUST be present (e.g. ['hog-rider', 'ice-golem'])",
-    )
-    description: str | None = None
-
-
-class ArchetypeResponse(BaseModel):
-    """Full archetype response including variant tree info."""
-
-    id: int
-    name: str
-    win_condition: str
-    play_style: ArchetypePlayStyle
-    is_timeless: bool
-    variant_of_id: int | None
-    # Name of the parent archetype (denormalized for convenience)
-    variant_of_name: str | None = None
-    core_cards: list[str]
-    description: str | None
-    created_at: datetime
-
-    model_config = {"from_attributes": True}
-
-
-class ArchetypeListItem(BaseModel):
-    """Lightweight archetype for list views."""
-
-    id: int
-    name: str
-    win_condition: str
-    play_style: ArchetypePlayStyle
-    is_timeless: bool
-    variant_of_id: int | None
-    core_cards: list[str]
-
-    model_config = {"from_attributes": True}
-
-
-class ArchetypeWithVariants(ArchetypeResponse):
-    """Archetype response enriched with its variants."""
-
-    variants: list[ArchetypeListItem] = Field(default_factory=list)
-
-
-class DeckMetaStatusResponse(BaseModel):
-    """Competitive status for a deck in a season."""
-
-    id: int
-    deck_id: int
-    season_id: int
-    season_name: str | None = None
-    status: MetaStatusValue
-    usage_rate: float | None
-    winrate: float | None
-    sample_size: int | None
-    computed_at: datetime
-
-    model_config = {"from_attributes": True}
-
-
-class DeckMetaStatusUpdate(BaseModel):
-    """Payload for upserting meta status (used by the compute job)."""
-
-    deck_id: int
-    season_id: int
-    status: MetaStatusValue
-    usage_rate: float | None = None
-    winrate: float | None = None
-    sample_size: int | None = None
-
-
-# =============================================================================
-# COMMON SCHEMAS
-# =============================================================================
+from pydantic import BaseModel, ConfigDict, computed_field
 
 
 class PaginatedResponse(BaseModel):
-    """Generic paginated response wrapper."""
-
-    items: list
     total: int
     page: int
     page_size: int
-    total_pages: int
 
 
-class ErrorResponse(BaseModel):
-    """Standard error response."""
+# =============================================================================
+# Player schemas
+# =============================================================================
 
-    error: str = Field(..., description="Error type")
-    message: str = Field(..., description="Human-readable error message")
-    detail: str | None = Field(None, description="Additional error details")
+
+class PlayerListItem(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    tag: str
+    name: str
+    exp_level: int
+    trophies: int
+    best_trophies: int
+    wins: int
+    losses: int
+    battle_count: int
+    clan_tag: str | None
+    clan_name: str | None
+    arena_id: int | None
+    arena_name: str | None
+    pol_league_number: int | None
+    pol_trophies: int | None
+    pol_rank: int | None
+    last_synced_at: datetime
+
+    @computed_field  # type: ignore[misc]
+    @property
+    def winrate(self) -> float | None:
+        if self.battle_count > 0:
+            return round(self.wins / self.battle_count * 100, 1)
+        return None
+
+
+class PlayerDetail(PlayerListItem):
+    three_crown_wins: int
+    challenge_max_wins: int | None
+    total_donations: int | None
+    donations: int | None
+    war_day_wins: int | None
+    clan_badge_id: int | None
+    role: str | None
+    current_deck: list[Any] | None
+    current_favourite_card: dict[str, Any] | None
+    league_statistics: dict[str, Any] | None
+    badges: list[Any] | None
+    created_at: datetime
+
+
+class PlayerSearchResponse(BaseModel):
+    players: list[PlayerListItem]
+    source: Literal["db", "api"]
+    total: int
+
+
+class PlayerTopResponse(PaginatedResponse):
+    items: list[PlayerListItem]
