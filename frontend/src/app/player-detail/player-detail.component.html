@@ -59,6 +59,23 @@
     </div>
   </div>
 
+  <!-- ── Tabs navigation ────────────────────────────────────────────── -->
+  <div class="flex gap-1 mb-6 p-1 rounded-xl" style="background:#0a1628; border:1px solid #1e3a5f;">
+    @for (tab of tabs; track tab.id) {
+    <button (click)="activeTab.set(tab.id)" class="flex-1 py-2 px-3 rounded-lg text-sm font-bold transition-all"
+      [style.background]="activeTab() === tab.id ? '#1e3a5f' : 'transparent'"
+      [style.color]="activeTab() === tab.id ? '#c8ddf0' : '#4a6a9c'"
+      [style.border]="activeTab() === tab.id ? '1px solid #2563eb' : '1px solid transparent'">
+      {{ tab.icon }} {{ tab.label }}
+    </button>
+    }
+  </div>
+
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!-- TAB : PROFIL                                                     -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  @if (activeTab() === 'profil') {
+
   <!-- ── Key stats ───────────────────────────────────────────────────── -->
   <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
 
@@ -211,7 +228,144 @@
     Dernière synchro : {{ player.last_synced_at | date:'dd/MM/yyyy HH:mm' }}
   </div>
 
-</div>
+  } <!-- end profil tab -->
 
-}
-}
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!-- TAB : BATTLE LOG                                                 -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  @if (activeTab() === 'battlelog') {
+  <div class="space-y-3">
+    <div class="flex items-center gap-2 mb-4">
+      <span class="text-xs font-bold px-2 py-1 rounded"
+        style="background:#1e3a5f; color:#60a5fa; border:1px solid #2563eb;">
+        MOCK — données simulées
+      </span>
+      <span class="text-xs" style="color:#4a6a9c;">Les vraies données seront disponibles prochainement</span>
+    </div>
+
+    @for (battle of mockBattles; track battle.id) {
+    <div class="rounded-xl p-4" style="background:#0d1e35; border:1px solid #1e3a5f;">
+      <!-- Header ligne -->
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2">
+          <!-- Résultat -->
+          <span class="text-xs font-black px-2 py-0.5 rounded"
+            [style.background]="battle.result === 'win' ? '#14532d' : '#450a0a'"
+            [style.color]="battle.result === 'win' ? '#22c55e' : '#ef4444'"
+            [style.border]="battle.result === 'win' ? '1px solid #16a34a' : '1px solid #dc2626'">
+            {{ battle.result === 'win' ? 'Victoire' : battle.result === 'loss' ? 'Défaite' : 'Égalité' }}
+          </span>
+          <span class="text-xs px-1.5 py-0.5 rounded font-medium"
+            style="background:#0a1628; color:#7ba8d0; border:1px solid #1e3a5f;">
+            {{ battle.type }}
+          </span>
+          @if (battle.trophyChange !== null) {
+          <span class="text-xs font-bold" [style.color]="battle.trophyChange > 0 ? '#22c55e' : '#ef4444'">
+            {{ battle.trophyChange > 0 ? '+' : '' }}{{ battle.trophyChange }} 🏆
+          </span>
+          }
+        </div>
+        <span class="text-xs" style="color:#4a6a9c;">
+          {{ battle.date | date:'dd/MM HH:mm' }}
+        </span>
+      </div>
+
+      <!-- Adversaire -->
+      <div class="flex items-center justify-between mb-3">
+        <div class="text-sm" style="color:#7ba8d0;">
+          vs <span class="font-bold" style="color:#c8ddf0;">{{ battle.opponentName }}</span>
+          <span class="text-xs font-mono ml-1" style="color:#4a6a9c;">#{{ battle.opponentTag }}</span>
+        </div>
+        <span class="text-xs" style="color:#fbbf24;">🏆 {{ battle.opponentTrophies.toLocaleString('fr-FR') }}</span>
+      </div>
+
+      <!-- Deck du joueur -->
+      <div>
+        <div class="text-xs mb-1.5" style="color:#4a6a9c;">Deck utilisé</div>
+        <div class="flex gap-1 flex-wrap">
+          @for (card of battle.playerCards; track card.name) {
+          <img [src]="card.icon" [alt]="card.name" [title]="card.name" class="w-8 h-8 rounded object-cover"
+            style="border:1px solid #1e3a5f;" />
+          }
+        </div>
+      </div>
+    </div>
+    }
+  </div>
+  } <!-- end battlelog tab -->
+
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!-- TAB : STATS DECKS                                                -->
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  @if (activeTab() === 'deck-stats') {
+
+  <!-- Filtre saison -->
+  <div class="flex gap-2 mb-5 flex-wrap">
+    @for (s of seasons; track s.id) {
+    <button (click)="selectedSeason.set(s.id)" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
+      [style.background]="selectedSeason() === s.id ? '#1e3a5f' : '#0a1628'"
+      [style.color]="selectedSeason() === s.id ? '#60a5fa' : '#4a6a9c'"
+      [style.border]="selectedSeason() === s.id ? '1px solid #2563eb' : '1px solid #1e3a5f'">
+      {{ s.label }}
+    </button>
+    }
+  </div>
+
+  <div class="flex items-center gap-2 mb-4">
+    <span class="text-xs font-bold px-2 py-1 rounded"
+      style="background:#1e3a5f; color:#60a5fa; border:1px solid #2563eb;">
+      MOCK — données simulées
+    </span>
+  </div>
+
+  <div class="space-y-4">
+    @for (deck of currentDeckStats; track deck.id; let i = $index) {
+    <div class="rounded-xl p-4" style="background:#0d1e35; border:1px solid #1e3a5f;">
+      <!-- Rang + winrate -->
+      <div class="flex items-center justify-between mb-3">
+        <span class="text-xs font-black" style="color:#4a6a9c;">Deck #{{ i + 1 }}</span>
+        <div class="flex items-center gap-3">
+          <span class="text-xs" style="color:#4a6a9c;">
+            <span style="color:#22c55e;">{{ deck.wins }}V</span>
+            &nbsp;·&nbsp;
+            <span style="color:#ef4444;">{{ deck.losses }}D</span>
+            &nbsp;·&nbsp;
+            {{ deck.wins + deck.losses }} parties
+          </span>
+          <span class="text-sm font-black" [style.color]="winrateColor(deck.winrate)">
+            {{ deck.winrate }}%
+          </span>
+        </div>
+      </div>
+
+      <!-- Barre winrate -->
+      <div class="w-full rounded-full mb-3" style="background:#0a1628; height:6px;">
+        <div class="rounded-full h-full transition-all" [style.width]="deck.winrate + '%'"
+          [style.background]="deck.winrate >= 55 ? '#22c55e' : deck.winrate >= 47 ? '#eab308' : '#ef4444'">
+        </div>
+      </div>
+
+      <!-- Cartes -->
+      <div class="flex gap-1 flex-wrap">
+        @for (card of deck.cards; track card.name) {
+        <div class="text-center">
+          <img [src]="card.icon" [alt]="card.name" [title]="card.name" class="w-10 h-10 rounded object-cover"
+            style="border:1px solid #1e3a5f;" />
+        </div>
+        }
+      </div>
+    </div>
+    }
+
+    @if (currentDeckStats.length === 0) {
+    <div class="text-center py-12" style="color:#4a6a9c;">
+      <div class="text-3xl mb-3">📊</div>
+      <p>Aucune donnée pour cette période</p>
+    </div>
+    }
+  </div>
+  } <!-- end deck-stats tab -->
+
+</div> <!-- end min-h-screen container -->
+} <!-- end @if (player) -->
+} <!-- end @else -->
