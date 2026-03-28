@@ -68,3 +68,32 @@ class PlayerSearchResponse(BaseModel):
 
 class PlayerTopResponse(PaginatedResponse):
     items: list[PlayerListItem]
+
+
+# =============================================================================
+# Battle schemas
+# =============================================================================
+
+
+class BattleItem(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    battle_time: datetime
+    battle_type: str | None
+    game_mode_name: str | None
+    arena_name: str | None
+    result: str
+    trophy_change: int | None
+    player_crowns: int
+    opponent_tag: str | None
+    opponent_name: str | None
+    opponent_crowns: int
+    opponent_trophies: int | None
+    player_cards: list[Any] | None
+    opponent_cards: list[Any] | None
+
+
+class BattleListResponse(BaseModel):
+    battles: list[BattleItem]
+    total: int

@@ -7,7 +7,7 @@ from app.c_bll.player_service import PlayerService
 from app.clients.cr_client import CRApiError
 from app.config import get_settings
 from app.database import get_db
-from app.schemas import PlayerDetail, PlayerListItem, PlayerSearchResponse, PlayerTopResponse
+from app.schemas import BattleItem, BattleListResponse, PlayerDetail, PlayerListItem, PlayerSearchResponse, PlayerTopResponse
 
 router = APIRouter(prefix="/api/v1/players", tags=["players"])
 settings = get_settings()
@@ -61,3 +61,16 @@ async def get_player(
             raise HTTPException(status_code=404, detail="Player not found")
         raise HTTPException(status_code=502, detail=f"CR API error: {exc}")
     return PlayerDetail.model_validate(player)
+
+
+@router.get("/{tag}/battles", response_model=BattleListResponse)
+async def get_player_battles(
+    tag: str,
+    limit: int = Query(25, ge=1, le=100),
+    service: PlayerService = Depends(_get_service),
+):
+    battles = await service.list_battles(tag, limit=limit)
+    return BattleListResponse(
+        battles=[BattleItem.model_validate(b) for b in battles],
+        total=len(battles),
+    )

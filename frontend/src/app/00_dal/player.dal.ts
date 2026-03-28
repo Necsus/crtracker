@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import {
+  BattleListResponse,
   PlayerDetail,
   PlayerSearchResponse,
   PlayerTopResponse,
@@ -26,5 +27,10 @@ export class PlayerDal {
 
   getPlayer(tag: string): Observable<PlayerDetail> {
     return this.http.get<PlayerDetail>(`/api/v1/players/${encodeURIComponent(tag)}`);
+  }
+
+  getBattles(tag: string, limit = 25): Observable<BattleListResponse> {
+    const params = new HttpParams().set('limit', limit);
+    return this.http.get<BattleListResponse>(`/api/v1/players/${encodeURIComponent(tag)}/battles`, { params });
   }
 }

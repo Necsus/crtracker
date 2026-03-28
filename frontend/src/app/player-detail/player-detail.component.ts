@@ -7,19 +7,6 @@ import { LoadingSpinnerComponent } from '../shared/components/loading-spinner/lo
 
 export type TabId = 'profil' | 'battlelog' | 'deck-stats';
 
-export interface MockBattle {
-  id: number;
-  date: string;
-  type: string;
-  result: 'win' | 'loss' | 'draw';
-  trophyChange: number | null;
-  opponentName: string;
-  opponentTag: string;
-  opponentTrophies: number;
-  playerCards: { name: string; icon: string }[];
-  opponentCards: { name: string; icon: string }[];
-}
-
 export interface MockDeckStat {
   id: number;
   cards: { name: string; icon: string }[];
@@ -30,87 +17,6 @@ export interface MockDeckStat {
 
 const ICON = (slug: string) =>
   `https://api-assets.clashroyale.com/cards/300/${slug}.png`;
-
-const MOCK_BATTLES: MockBattle[] = [
-  {
-    id: 1, date: '2026-03-24T14:32:00Z', type: 'Classée', result: 'win', trophyChange: 28,
-    opponentName: 'GrumpyCat99', opponentTag: 'Q2YLVRL', opponentTrophies: 7340,
-    playerCards: [
-      { name: 'Hog Rider', icon: ICON('Ubu0oUl8tZkusnkZf8Xv9Vno5IO29Y-jbZ4fhoNJ5oc') },
-      { name: 'Musketeer', icon: ICON('Tex1C48UTq9FKtAX-3tzG0FJmc9jzncUZG3bb5Vf-Ds') },
-      { name: 'Ice Spirit', icon: ICON('lv1budiafU9XmSdrDkk0NYyqASAFYyZ06CPysXKZXlA') },
-      { name: 'The Log', icon: ICON('_iDwuDLexHPFZ_x4_a0eP-rxCS6vwWgTs6DLauwwoaY') },
-      { name: 'Cannon', icon: ICON('nZK1y-beLxO5vnlyUhK6-2zH2NzXJwqykcosqQ1cmZ8') },
-      { name: 'Ice Golem', icon: ICON('r05cmpwV1o7i7FHodtZwW3fmjbXCW34IJCsDEV5cZC4') },
-      { name: 'Skeletons', icon: ICON('oO7iKMU5m0cdxhYPZA3nWQiAUh2yoGgdThLWB1rVSec') },
-      { name: 'Fireball', icon: ICON('lZD9MILQv7O-P3XBr_xOLS5idwuz3_7Ws9G60U36yhc') },
-    ],
-    opponentCards: [
-      { name: 'Giant', icon: ICON('jy-AF9KkNRhKZNPy0GJrexFMCalBRwSWxnYTjNj2i0c') },
-      { name: 'Witch', icon: ICON('b4FkDGLMwCKM6Xw6wOIZQP-BjS_N8MO-DfUjAFCED8') },
-    ],
-  },
-  {
-    id: 2, date: '2026-03-24T13:10:00Z', type: 'Classée', result: 'loss', trophyChange: -15,
-    opponentName: 'DarkKnight', opponentTag: 'YR88PUQG', opponentTrophies: 7600,
-    playerCards: [
-      { name: 'Hog Rider', icon: ICON('Ubu0oUl8tZkusnkZf8Xv9Vno5IO29Y-jbZ4fhoNJ5oc') },
-      { name: 'Musketeer', icon: ICON('Tex1C48UTq9FKtAX-3tzG0FJmc9jzncUZG3bb5Vf-Ds') },
-      { name: 'Ice Spirit', icon: ICON('lv1budiafU9XmSdrDkk0NYyqASAFYyZ06CPysXKZXlA') },
-      { name: 'The Log', icon: ICON('_iDwuDLexHPFZ_x4_a0eP-rxCS6vwWgTs6DLauwwoaY') },
-      { name: 'Cannon', icon: ICON('nZK1y-beLxO5vnlyUhK6-2zH2NzXJwqykcosqQ1cmZ8') },
-      { name: 'Ice Golem', icon: ICON('r05cmpwV1o7i7FHodtZwW3fmjbXCW34IJCsDEV5cZC4') },
-      { name: 'Skeletons', icon: ICON('oO7iKMU5m0cdxhYPZA3nWQiAUh2yoGgdThLWB1rVSec') },
-      { name: 'Fireball', icon: ICON('lZD9MILQv7O-P3XBr_xOLS5idwuz3_7Ws9G60U36yhc') },
-    ],
-    opponentCards: [],
-  },
-  {
-    id: 3, date: '2026-03-24T11:55:00Z', type: 'Challenge', result: 'win', trophyChange: null,
-    opponentName: 'Cr4zyPig', opponentTag: 'G2PJQ0L8', opponentTrophies: 6900,
-    playerCards: [
-      { name: 'Hog Rider', icon: ICON('Ubu0oUl8tZkusnkZf8Xv9Vno5IO29Y-jbZ4fhoNJ5oc') },
-      { name: 'Musketeer', icon: ICON('Tex1C48UTq9FKtAX-3tzG0FJmc9jzncUZG3bb5Vf-Ds') },
-      { name: 'Ice Spirit', icon: ICON('lv1budiafU9XmSdrDkk0NYyqASAFYyZ06CPysXKZXlA') },
-      { name: 'The Log', icon: ICON('_iDwuDLexHPFZ_x4_a0eP-rxCS6vwWgTs6DLauwwoaY') },
-      { name: 'Cannon', icon: ICON('nZK1y-beLxO5vnlyUhK6-2zH2NzXJwqykcosqQ1cmZ8') },
-      { name: 'Ice Golem', icon: ICON('r05cmpwV1o7i7FHodtZwW3fmjbXCW34IJCsDEV5cZC4') },
-      { name: 'Skeletons', icon: ICON('oO7iKMU5m0cdxhYPZA3nWQiAUh2yoGgdThLWB1rVSec') },
-      { name: 'Fireball', icon: ICON('lZD9MILQv7O-P3XBr_xOLS5idwuz3_7Ws9G60U36yhc') },
-    ],
-    opponentCards: [],
-  },
-  {
-    id: 4, date: '2026-03-23T20:40:00Z', type: 'Classée', result: 'win', trophyChange: 30,
-    opponentName: '꧁༒ Xeno ༒꧂', opponentTag: 'PLVR2C0Y', opponentTrophies: 7150,
-    playerCards: [
-      { name: 'Hog Rider', icon: ICON('Ubu0oUl8tZkusnkZf8Xv9Vno5IO29Y-jbZ4fhoNJ5oc') },
-      { name: 'Musketeer', icon: ICON('Tex1C48UTq9FKtAX-3tzG0FJmc9jzncUZG3bb5Vf-Ds') },
-      { name: 'Ice Spirit', icon: ICON('lv1budiafU9XmSdrDkk0NYyqASAFYyZ06CPysXKZXlA') },
-      { name: 'The Log', icon: ICON('_iDwuDLexHPFZ_x4_a0eP-rxCS6vwWgTs6DLauwwoaY') },
-      { name: 'Cannon', icon: ICON('nZK1y-beLxO5vnlyUhK6-2zH2NzXJwqykcosqQ1cmZ8') },
-      { name: 'Ice Golem', icon: ICON('r05cmpwV1o7i7FHodtZwW3fmjbXCW34IJCsDEV5cZC4') },
-      { name: 'Skeletons', icon: ICON('oO7iKMU5m0cdxhYPZA3nWQiAUh2yoGgdThLWB1rVSec') },
-      { name: 'Fireball', icon: ICON('lZD9MILQv7O-P3XBr_xOLS5idwuz3_7Ws9G60U36yhc') },
-    ],
-    opponentCards: [],
-  },
-  {
-    id: 5, date: '2026-03-23T19:12:00Z', type: 'Classée', result: 'loss', trophyChange: -18,
-    opponentName: 'ProPlayer', opponentTag: 'XCY9PQRU', opponentTrophies: 7820,
-    playerCards: [
-      { name: 'Hog Rider', icon: ICON('Ubu0oUl8tZkusnkZf8Xv9Vno5IO29Y-jbZ4fhoNJ5oc') },
-      { name: 'Musketeer', icon: ICON('Tex1C48UTq9FKtAX-3tzG0FJmc9jzncUZG3bb5Vf-Ds') },
-      { name: 'Ice Spirit', icon: ICON('lv1budiafU9XmSdrDkk0NYyqASAFYyZ06CPysXKZXlA') },
-      { name: 'The Log', icon: ICON('_iDwuDLexHPFZ_x4_a0eP-rxCS6vwWgTs6DLauwwoaY') },
-      { name: 'Cannon', icon: ICON('nZK1y-beLxO5vnlyUhK6-2zH2NzXJwqykcosqQ1cmZ8') },
-      { name: 'Ice Golem', icon: ICON('r05cmpwV1o7i7FHodtZwW3fmjbXCW34IJCsDEV5cZC4') },
-      { name: 'Skeletons', icon: ICON('oO7iKMU5m0cdxhYPZA3nWQiAUh2yoGgdThLWB1rVSec') },
-      { name: 'Fireball', icon: ICON('lZD9MILQv7O-P3XBr_xOLS5idwuz3_7Ws9G60U36yhc') },
-    ],
-    opponentCards: [],
-  },
-];
 
 const MOCK_DECK_STATS: Record<string, MockDeckStat[]> = {
   current: [
@@ -218,7 +124,6 @@ export class PlayerDetailComponent implements OnInit {
     { id: 'all' as const, label: 'Tout le temps' },
   ];
 
-  readonly mockBattles = MOCK_BATTLES;
   readonly mockDeckStats = MOCK_DECK_STATS;
 
   get currentDeckStats(): MockDeckStat[] {
@@ -228,6 +133,7 @@ export class PlayerDetailComponent implements OnInit {
   ngOnInit(): void {
     const tag = this.route.snapshot.paramMap.get('tag') ?? '';
     this.service.loadPlayer(tag);
+    this.service.loadBattles(tag);
   }
 
   winrateColor(wr: number | null): string {

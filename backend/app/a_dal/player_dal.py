@@ -1,5 +1,7 @@
 """Player data access layer."""
 
+from datetime import datetime, timezone
+
 from sqlalchemy import asc, desc, func, nulls_last, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -61,6 +63,7 @@ class PlayerDAL:
 
         # Fields to update on conflict (everything except immutable identity cols)
         update_set = {k: v for k, v in data.items() if k not in ("tag", "created_at")}
+        update_set["last_synced_at"] = datetime.now(timezone.utc)
 
         stmt = (
             pg_insert(Player)

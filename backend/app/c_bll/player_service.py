@@ -5,17 +5,23 @@ from datetime import datetime, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.a_dal.battle_dal import BattleDAL
 from app.a_dal.player_dal import PlayerDAL
+from app.b_models.battle import Battle
 from app.b_models.player import Player
-from app.clients.cr_client import CRApiError, fetch_player
+from app.clients.cr_client import CRApiError, fetch_battles, fetch_player
 
 # Regex for a valid CR tag fragment (letters + digits, 3+ chars, no #)
 _TAG_RE = re.compile(r"^[0-9A-Z]{2,}$")
+
+# Auto-refresh player from CR API if data is older than this
+_PLAYER_REFRESH_SECONDS = 3 * 60  # 3 minutes
 
 
 class PlayerService:
     def __init__(self, session: AsyncSession, cr_token: str):
         self.dal = PlayerDAL(session)
+        self.battle_dal = BattleDAL(session)
         self.cr_token = cr_token
 
     async def list_top(
@@ -63,13 +69,87 @@ class PlayerService:
             return db_results, "db"
 
     async def get_or_fetch(self, tag: str) -> Player:
-        """Return the player from DB, fetching from CR API and saving if absent."""
+        """Return the player from DB, fetching from CR API if absent or stale (> 3 min).
+        Also syncs the battle log whenever a CR API refresh happens.
+        """
         player = await self.dal.get_by_tag(tag)
-        if player:
+        if player is None:
+            raw = await fetch_player(tag, self.cr_token)
+            data = _parse_cr_player(raw)
+            player = await self.dal.upsert(data)
+            await self._sync_battles(tag)
             return player
-        raw = await fetch_player(tag, self.cr_token)
-        data = _parse_cr_player(raw)
-        return await self.dal.upsert(data)
+
+        age = (datetime.now(timezone.utc) - player.last_synced_at).total_seconds()
+        if age > _PLAYER_REFRESH_SECONDS:
+            try:
+                raw = await fetch_player(tag, self.cr_token)
+                data = _parse_cr_player(raw)
+                player = await self.dal.upsert(data)
+                await self._sync_battles(tag)
+            except CRApiError:
+                pass  # fallback to existing DB data if CR API fails
+
+        return player
+
+    async def _sync_battles(self, tag: str) -> None:
+        """Fetch battlelog from CR API and upsert new battles into DB."""
+        try:
+            raw_battles = await fetch_battles(tag, self.cr_token)
+        except CRApiError:
+            return
+        normalized_tag = tag.strip().upper().lstrip("#")
+        battles = [_parse_cr_battle(normalized_tag, b) for b in raw_battles]
+        await self.battle_dal.upsert_many(battles)
+
+    async def list_battles(self, tag: str, limit: int = 25) -> list[Battle]:
+        normalized_tag = tag.strip().upper().lstrip("#")
+        return await self.battle_dal.list_by_player_tag(normalized_tag, limit=limit)
+
+
+def _parse_cr_battle(player_tag: str, raw: dict) -> dict:
+    """Map a raw CR API battle dict to Battle model fields."""
+    team = raw.get("team") or [{}]
+    opponent = raw.get("opponent") or [{}]
+    me = team[0] if team else {}
+    opp = opponent[0] if opponent else {}
+
+    battle_time_raw: str = raw.get("battleTime", "")
+    # Parse CR format: "20260101T001122.000Z" → datetime
+    try:
+        battle_time = datetime.strptime(battle_time_raw, "%Y%m%dT%H%M%S.%fZ").replace(tzinfo=timezone.utc)
+    except ValueError:
+        battle_time = datetime.now(timezone.utc)
+
+    my_crowns = me.get("crowns", 0) or 0
+    opp_crowns = opp.get("crowns", 0) or 0
+    if my_crowns > opp_crowns:
+        result = "win"
+    elif my_crowns < opp_crowns:
+        result = "loss"
+    else:
+        result = "draw"
+
+    opp_tag = (opp.get("tag") or "").lstrip("#")
+
+    return {
+        "player_tag": player_tag,
+        "battle_key": f"{player_tag}_{battle_time_raw}",
+        "battle_time": battle_time,
+        "battle_type": raw.get("type"),
+        "game_mode_name": (raw.get("gameMode") or {}).get("name"),
+        "arena_name": (raw.get("arena") or {}).get("name"),
+        "result": result,
+        "trophy_change": me.get("trophyChange"),
+        "player_crowns": my_crowns,
+        "opponent_tag": opp_tag or None,
+        "opponent_name": opp.get("name"),
+        "opponent_crowns": opp_crowns,
+        "opponent_trophies": opp.get("startingTrophies"),
+        "player_cards": me.get("cards"),
+        "opponent_cards": opp.get("cards"),
+        "raw_data": raw,
+    }
 
 
 def _parse_cr_player(raw: dict) -> dict:

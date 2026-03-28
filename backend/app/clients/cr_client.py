@@ -21,21 +21,20 @@ def _encode_tag(tag: str) -> str:
 
 
 async def fetch_player(tag: str, token: str) -> dict:
-    """Fetch a single player by tag from the CR API.
-
-    Args:
-        tag: Player tag with or without leading #.
-        token: Bearer token from developer.clashroyale.com.
-
-    Returns:
-        Raw player dict as returned by the CR API.
-
-    Raises:
-        CRApiError: On any non-200 HTTP response.
-    """
+    """Fetch a single player by tag from the CR API."""
     url = f"{_BASE_URL}/players/{_encode_tag(tag)}"
     async with httpx.AsyncClient(timeout=10.0) as client:
         resp = await client.get(url, headers={"Authorization": f"Bearer {token}"})
     if resp.status_code != 200:
         raise CRApiError(resp.status_code, resp.text[:200])
     return resp.json()
+
+
+async def fetch_battles(tag: str, token: str) -> list[dict]:
+    """Fetch the battlelog for a player from the CR API."""
+    url = f"{_BASE_URL}/players/{_encode_tag(tag)}/battlelog"
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        resp = await client.get(url, headers={"Authorization": f"Bearer {token}"})
+    if resp.status_code != 200:
+        raise CRApiError(resp.status_code, resp.text[:200])
+    return resp.json()  # returns a list of battle dicts

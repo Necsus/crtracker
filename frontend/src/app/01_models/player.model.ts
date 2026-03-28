@@ -58,6 +58,36 @@ export interface BadgeItem {
   iconUrls?: { large?: string };
 }
 
+export interface BattleCardItem {
+  name: string;
+  id: number;
+  level?: number;
+  maxLevel?: number;
+  iconUrls?: { medium?: string };
+}
+
+export interface BattleItem {
+  id: number;
+  battle_time: string;
+  battle_type: string | null;
+  game_mode_name: string | null;
+  arena_name: string | null;
+  result: 'win' | 'loss' | 'draw';
+  trophy_change: number | null;
+  player_crowns: number;
+  opponent_tag: string | null;
+  opponent_name: string | null;
+  opponent_crowns: number;
+  opponent_trophies: number | null;
+  player_cards: BattleCardItem[] | null;
+  opponent_cards: BattleCardItem[] | null;
+}
+
+export interface BattleListResponse {
+  battles: BattleItem[];
+  total: number;
+}
+
 export interface PlayerSearchResponse {
   players: PlayerListItem[];
   source: 'db' | 'api';
