@@ -1,91 +1,81 @@
-/* ============================================
-   PLAYERS LIST COMPONENT
-   Path of Legend leaderboard page
-   ============================================ */
+import { NgTemplateOutlet } from '@angular/common';
+import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
-import { DecimalPipe, NgClass } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
-
-import { DeckDal } from '../00_dal/deck.dal';
-import type { PlayerListItem } from '../01_models/deck.model';
+import { PlayerListItem } from '../01_models/player.model';
+import { PlayerService } from '../10_bll/player.service';
 import { LoadingSpinnerComponent } from '../shared/components/loading-spinner/loading-spinner.component';
 
 @Component({
   selector: 'app-players-list',
   standalone: true,
-  imports: [NgClass, RouterLink, LoadingSpinnerComponent, DecimalPipe],
+  imports: [LoadingSpinnerComponent, NgTemplateOutlet],
   templateUrl: './players-list.component.html',
 })
-export class PlayersListComponent implements OnInit {
-  private readonly dal = inject(DeckDal);
+export class PlayersListComponent implements OnInit, OnDestroy {
+  service = inject(PlayerService);
+  private router = inject(Router);
 
-  /* ── State ──────────────────────────────────── */
-  readonly players = signal<PlayerListItem[]>([]);
-  readonly total = signal(0);
-  readonly loading = signal(true);
-  readonly error = signal<string | null>(null);
-  readonly availableSeasons = signal<string[]>([]);
-
-  readonly seasonFilter = signal<string | null>(null);
-  readonly offset = signal(0);
-  readonly limit = 50;
-
-  /* ── Derived ────────────────────────────────── */
-  readonly totalPages = computed(() => Math.ceil(this.total() / this.limit));
-  readonly currentPage = computed(() => Math.floor(this.offset() / this.limit) + 1);
-  readonly hasNext = computed(() => this.offset() + this.limit < this.total());
-  readonly hasPrev = computed(() => this.offset() > 0);
+  searchQuery = signal('');
+  private searchSubject = new Subject<string>();
 
   ngOnInit(): void {
-    this.dal.listPlayerSeasons().subscribe({
-      next: (seasons) => this.availableSeasons.set(seasons),
-    });
-    this.load();
-  }
+    this.service.loadTopPlayers();
 
-  load(): void {
-    this.loading.set(true);
-    this.error.set(null);
-
-    const params: Record<string, unknown> = { offset: this.offset(), limit: this.limit };
-    if (this.seasonFilter()) params['season'] = this.seasonFilter();
-
-    this.dal.listPlayers(params as Parameters<DeckDal['listPlayers']>[0]).subscribe({
-      next: (res) => {
-        this.players.set(res.items);
-        this.total.set(res.total);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.error.set('Failed to load players.');
-        this.loading.set(false);
-      },
+    this.searchSubject.pipe(
+      debounceTime(400),
+      distinctUntilChanged(),
+    ).subscribe(query => {
+      if (query.length === 0) {
+        this.service.clearSearch();
+      } else if (query.length >= 2) {
+        this.service.search(query);
+      }
     });
   }
 
-  setSeason(season: string | null): void {
-    this.seasonFilter.set(season);
-    this.offset.set(0);
-    this.load();
+  onSearchInput(event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    this.searchQuery.set(value);
+    this.searchSubject.next(value);
   }
 
-  nextPage(): void {
-    this.offset.update((v) => v + this.limit);
-    this.load();
+  navigateToPlayer(tag: string): void {
+    this.router.navigate(['/players', tag]);
   }
 
-  prevPage(): void {
-    this.offset.update((v) => Math.max(0, v - this.limit));
-    this.load();
+  polLeagueLabel(league: number | null): string {
+    if (league === null) return '';
+    const labels: Record<number, string> = {
+      1: 'Bronze I', 2: 'Bronze II', 3: 'Bronze III',
+      4: 'Silver I', 5: 'Silver II', 6: 'Gold',
+      7: 'Master', 8: 'Champion', 9: 'Grand Champion', 10: 'Ultimate Champion',
+    };
+    return labels[league] ?? `League ${league}`;
   }
 
-  /* ── Helpers ─────────────────────────────────── */
+  polLeagueColor(league: number | null): string {
+    if (!league) return '#6b7280';
+    if (league <= 3) return '#cd7f32';
+    if (league <= 5) return '#9ca3af';
+    if (league === 6) return '#eab308';
+    if (league === 7) return '#8b5cf6';
+    if (league === 8) return '#3b82f6';
+    if (league === 9) return '#ec4899';
+    return '#f97316';
+  }
 
-  rankEmoji(rank: number | null): string {
-    if (rank === 1) return '🥇';
-    if (rank === 2) return '🥈';
-    if (rank === 3) return '🥉';
-    return rank != null ? `#${rank}` : '—';
+  formatNumber(n: number): string {
+    return n.toLocaleString('fr-FR');
+  }
+
+  trackByTag(_: number, player: PlayerListItem): string {
+    return player.tag;
+  }
+
+  ngOnDestroy(): void {
+    this.searchSubject.complete();
   }
 }

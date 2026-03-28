@@ -9,6 +9,46 @@ source .venv/bin/activate  # Windows : .venv\Scripts\Activate.ps1
 
 ---
 
+## seed_archetypes.py 🏷️ Archetypes indemodables
+
+Peuple la table `archetypes` avec les archétypes *indemodables* (timeless) : Hog 2.6, Log Bait, X-Bow 3.0, etc.
+
+**Ordre recommandé d'exécution :**
+```
+alembic upgrade head          # migration 006 (tables archetypes + deck_meta_statuses)
+python -m scripts.sync_cards  # remplir la table cards pour la résolution des IDs
+python -m scripts.seed_archetypes --commit
+```
+
+```bash
+# Aperçu sans écriture (dry-run par défaut)
+python -m scripts.seed_archetypes
+
+# Écriture effective en base
+python -m scripts.seed_archetypes --commit
+```
+
+**Archetypes seedés :**
+
+| Famille | Variantes timeless |
+|---|---|
+| Hog Cycle | Hog 2.6, Hog 3.0 |
+| Log Bait | Log Bait Classic |
+| X-Bow Siege | X-Bow 3.0, X-Bow 4.0 |
+| Mortar Cycle | — |
+| Golem Beatdown | Golem Night Witch, Golem Lumberjack |
+| LavaLoon | LavaLoon Tombstone, LavaLoon Freeze |
+| Miner Control | Miner Poison Gang |
+| Graveyard Control | Graveyard Poison |
+| PEKKA Bridge Spam | Classic PEKKA BS |
+| Giant Beatdown | Giant Double Prince |
+
+**Résolution des card IDs :** le script traduit les noms de cartes lisibles ("Hog Rider") vers l'`id` numérique CR API stocké dans `decks.cards[].id`.  Si la table `cards` est vide (environnement mock), il utilise un slug kebab-case comme fallback (`hog-rider`).
+
+**Idempotent :** peut être relancé sans créer de doublons (upsert par `name`).
+
+---
+
 ## sync_top1000.py ✨ Recommandé
 
 Pipeline complet en une seule commande : classement → profils → battlelogs → decks.
