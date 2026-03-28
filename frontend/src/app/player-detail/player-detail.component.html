@@ -275,8 +275,8 @@
           </span>
           }
           @if (battle.trophy_change !== null) {
-          <span class="text-xs font-bold" [style.color]="(battle.trophy_change ?? 0) > 0 ? '#22c55e' : '#ef4444'">
-            {{ (battle.trophy_change ?? 0) > 0 ? '+' : '' }}{{ battle.trophy_change }} 🏆
+          <span class="text-xs font-bold" [style.color]="battle.trophy_change > 0 ? '#22c55e' : '#ef4444'">
+            {{ battle.trophy_change > 0 ? '+' : '' }}{{ battle.trophy_change }} 🏆
           </span>
           }
         </div>
